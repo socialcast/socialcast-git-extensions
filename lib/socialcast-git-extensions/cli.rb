@@ -109,16 +109,9 @@ module Socialcast
 
         update
         integrate_branch(branch, target_branch)
-        integrate_branch(target_branch, 'prototype') if target_branch == 'staging'
         run_cmd "git checkout #{branch}"
 
         post "#worklog integrating #{branch} into #{target_branch} #scgitx"
-      end
-
-      desc 'promote', '(DEPRECATED) promote the current branch into staging'
-      def promote
-        say 'DEPRECATED: Use `git integrate staging` instead', :red
-        integrate 'staging'
       end
 
       desc 'nuke', 'nuke the specified aggregate branch and reset it to a known good state'
@@ -144,7 +137,6 @@ module Socialcast
         update
         integrate_branch branch, Socialcast::Gitx::BASE_BRANCH
         run_cmd "git checkout #{Socialcast::Gitx::BASE_BRANCH}"
-        invoke :integrate, ['staging', '--quiet']
         run_cmd "grb rm #{branch}"
 
         post "#worklog releasing #{branch} to production #scgitx"

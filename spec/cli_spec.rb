@@ -72,30 +72,6 @@ describe Socialcast::Gitx::CLI do
         ]
       end
     end
-    context 'when target branch == staging' do
-      before do
-        Socialcast::Gitx::CLI.start ['integrate', 'staging']
-      end
-      it 'should also integrate into prototype and run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
-          "git pull origin FOO",
-          "git pull origin master",
-          "git push origin HEAD",
-          "git remote prune origin",
-          "git remote prune origin",
-          "git checkout staging",
-          "git pull . FOO",
-          "git push origin HEAD",
-          "git checkout FOO",
-          "git remote prune origin",
-          "git checkout prototype",
-          "git pull . staging",
-          "git push origin HEAD",
-          "git checkout staging",
-          "git checkout FOO"
-        ]
-      end
-    end
     context 'when target branch != staging || prototype' do
       it 'should raise an error' do
         lambda {
@@ -130,21 +106,6 @@ describe Socialcast::Gitx::CLI do
           "git checkout master",
           "git pull . FOO",
           "git push origin HEAD",
-          "git checkout FOO",
-          "git pull origin FOO",
-          "git pull origin master",
-          "git push origin HEAD",
-          "git remote prune origin",
-          "git remote prune origin",
-          "git checkout staging",
-          "git pull . FOO",
-          "git push origin HEAD",
-          "git checkout FOO",
-          "git remote prune origin",
-          "git checkout prototype",
-          "git pull . staging",
-          "git push origin HEAD",
-          "git checkout staging",
           "git checkout FOO",
           "git checkout master",
           "grb rm FOO"
@@ -263,31 +224,6 @@ describe Socialcast::Gitx::CLI do
           "git remote prune origin"
         ]
       end
-    end
-  end
-
-  describe '#promote' do
-    before do
-      Socialcast::Gitx::CLI.start ['promote']
-    end
-    it 'should integrate into staging' do
-      Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
-        "git pull origin FOO",
-        "git pull origin master",
-        "git push origin HEAD",
-        "git remote prune origin",
-        "git remote prune origin",
-        "git checkout staging",
-        "git pull . FOO",
-        "git push origin HEAD",
-        "git checkout FOO",
-        "git remote prune origin",
-        "git checkout prototype",
-        "git pull . staging",
-        "git push origin HEAD",
-        "git checkout staging",
-        "git checkout FOO"
-      ]
     end
   end
 end
