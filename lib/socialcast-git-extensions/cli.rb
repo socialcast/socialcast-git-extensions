@@ -53,13 +53,13 @@ module Socialcast
         run_cmd "git pull origin #{branch}" rescue nil
         run_cmd "git pull origin #{Socialcast::Gitx::BASE_BRANCH}"
         run_cmd 'git push origin HEAD'
-        run_cmd 'git remote prune origin'
       end
 
       desc 'cleanup', 'Cleanup branches that have been merged into master from the repo'
       def cleanup
         run_cmd "git checkout #{Socialcast::Gitx::BASE_BRANCH}"
         run_cmd "git pull"
+        run_cmd 'git remote prune origin'
 
         say "Deleting branches that have been merged into "
         say Socialcast::Gitx::BASE_BRANCH, :green
@@ -124,7 +124,14 @@ module Socialcast
         removed_branches = reset_branch(bad_branch, good_branch)
         reset_branch("last_known_good_#{bad_branch}", good_branch) unless "last_known_good_#{bad_branch}" == good_branch
 
-        post "#worklog resetting #{bad_branch} branch to #{good_branch} #scgitx\n\nthe following branches were affected:\n#{removed_branches.map{|b| '* ' + b}.join("\n") }"
+        message_parts = []
+        message_parts << "#worklog resetting #{bad_branch} branch to #{good_branch} #scgitx"
+        if removed_branches.any?
+          message_parts << ""
+          message_parts << "the following branches were affected:"
+          messgae_parts += removed_branches.map{|b| '* ' + b}
+        end
+        post message_parts.join("\n")
       end
 
       desc 'release', 'release the current branch to production'
@@ -137,7 +144,7 @@ module Socialcast
         update
         integrate_branch branch, Socialcast::Gitx::BASE_BRANCH
         run_cmd "git checkout #{Socialcast::Gitx::BASE_BRANCH}"
-        run_cmd "grb rm #{branch}"
+        cleanup
 
         post "#worklog releasing #{branch} to production #scgitx"
       end
