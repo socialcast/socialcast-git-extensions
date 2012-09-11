@@ -5,6 +5,7 @@ module Socialcast
     module Git
       AGGREGATE_BRANCHES = %w{ staging prototype }
       RESERVED_BRANCHES = %w{ HEAD master next_release } + AGGREGATE_BRANCHES
+      RETAINED_BRANCH_PREFIX = "backport_"
 
       private
       def assert_not_protected_branch!(branch, action)
@@ -85,6 +86,13 @@ module Socialcast
         run_cmd "git pull origin #{destination_branch}"
       end
 
+      # retain a copy of a branch for backporting
+      def retain_branch(branch)
+        new_branch = retained_branch_name branch
+        say "Retaining a copy of #{branch} as #{new_branch}"
+        run_cmd "git push origin #{branch}:#{new_branch}"
+      end
+
       def aggregate_branch?(branch)
         AGGREGATE_BRANCHES.include?(branch) || branch.starts_with?('last_known_good')
       end
@@ -127,6 +135,11 @@ module Socialcast
           description = File.read(f.path)
           description.gsub(/^\#.*/, '').chomp.strip
         end
+      end
+
+      # generate a name for a retained branch
+      def retained_branch_name(original_branch_name)
+        RETAINED_BRANCH_PREFIX + original_branch_name
       end
     end
   end

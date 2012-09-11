@@ -149,6 +149,19 @@ module Socialcast
 
         return unless yes?("Release #{branch} to production? (y/n)", :green)
 
+        say "
+        You should retain #{branch} for backporting if
+
+          \t* It aims to fix some kind of problem with functionality already released to SaaS
+
+          \t* You have been instructed to retain this branch
+
+          \t* You're not sure (better safe than sorry!)
+
+          ".gsub(/^[ ]+/, "")
+
+        retain_branch branch if yes?("Retain a copy of #{branch} for backporting? (y/n)", :green) 
+
         update
         run_cmd "git checkout #{Socialcast::Gitx::BASE_BRANCH}"
         run_cmd "git pull origin #{Socialcast::Gitx::BASE_BRANCH}"
