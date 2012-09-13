@@ -9,7 +9,11 @@ module Socialcast
 
       private
       def assert_not_protected_branch!(branch, action)
-        raise "Cannot #{action} reserved branch" if reserved_branch?(branch) || aggregate_branch?(branch) || retained_branch?(branch)
+        raise "Cannot #{action} reserved branch" if protected_branch? branch
+      end
+
+      def protected_branch?(branch)
+        reserved_branch?(branch) || aggregate_branch?(branch) || retained_branch?(branch)
       end
 
       # lookup the current branch of the PWD

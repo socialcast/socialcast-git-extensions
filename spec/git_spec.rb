@@ -48,22 +48,33 @@ describe Socialcast::Gitx::Git do
     end
   end
 
-  describe "assert_not_protected_branch! method" do
-    it "should not raise an error if the branch is not retained, aggregate or reserved branch" do
+  describe "protected_branch?" do
+    it "should return false if the branch is not retained, aggregate or reserved" do
       subject.stub(:retained_branch? => false, :aggregate_branch? => false, :reserved_branch? => false)
-      expect { subject.send :assert_not_protected_branch!, "foobar", "noop" }.to_not raise_error       
+      subject.send(:protected_branch?, "foobar").should be_false
     end
-    it "should raise an error if the branch is a retained branch" do
+    it "should return true if the branch is retained" do
       subject.stub(:retained_branch? => true, :aggregate_branch? => false, :reserved_branch? => false)
-      expect { subject.send :assert_not_protected_branch!, "foobar", "noop" }.to raise_error       
+      subject.send(:protected_branch?, "foobar").should be_true
     end
-    it "should raise an error if the branch is an aggregate branch" do
+    it "should return true if the branch is aggregate" do
       subject.stub(:retained_branch? => false, :aggregate_branch? => true, :reserved_branch? => false)
-      expect { subject.send :assert_not_protected_branch!, "foobar", "noop" }.to raise_error       
+      subject.send(:protected_branch?, "foobar").should be_true
     end
-    it "should raise an error if the branch is a reserved branch" do
+    it "should return true if the branch is reserved" do
       subject.stub(:retained_branch? => false, :aggregate_branch? => false, :reserved_branch? => true)
-      expect { subject.send :assert_not_protected_branch!, "foobar", "noop" }.to raise_error       
+      subject.send(:protected_branch?, "foobar").should be_true
+    end
+  end
+
+  describe "assert_not_protected_branch! method" do
+    it "should raise an error if the branch is a protected branch" do
+      subject.stub(:protected_branch? => true)
+      expect { subject.send :assert_not_protected_branch!, "foobar", "noop" }.to raise_error
+    end
+    it "should not raise an error if the branch is not a protected branch" do
+      subject.stub(:protected_branch? => false)
+      expect { subject.send :assert_not_protected_branch!, "foobar", "noop" }.to_not raise_error
     end
   end
 
