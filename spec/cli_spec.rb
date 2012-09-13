@@ -114,24 +114,59 @@ describe Socialcast::Gitx::CLI do
   end
 
   describe '#release' do
+    before do
+      Socialcast::Gitx::CLI.any_instance.stub(:branches).with(:remote => true, :merged => true).and_return([])
+      Socialcast::Gitx::CLI.any_instance.stub(:branches).with(:merged => true).and_return([])
+    end
     context 'when user rejects release' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(false)
+        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).with { |branch, action| branch =~ /release/i }.and_return(false)
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'should run no commands' do
         Socialcast::Gitx::CLI.stubbed_executed_commands.should == []
       end
     end
-    context 'when user confirms release' do
+    context 'when user confirms release but does not retain' do
       before do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to production #scgitx")
-        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
+        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).with { |branch, action| branch =~ /release/i }.and_return(true)
+        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).with { |branch, action| branch =~ /retain/i }.and_return(false)
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do
         Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+          "git pull origin FOO",
+          "git pull origin master",
+          "git push origin HEAD",
+          "git checkout master",
+          "git pull origin master",
+          "git pull . FOO",
+          "git push origin HEAD",
+          "git branch -D staging",
+          "git checkout staging",
+          "git pull origin staging",
+          "git pull . master",
+          "git push origin HEAD",
+          "git checkout master",
+          "git checkout master",
+          "git pull",
+          "git remote prune origin"
+        ]
+      end
+    end
+    context 'when user confirms release not retains' do
+      before do
+        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to production #scgitx")
+        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).with { |branch, action| branch =~ /release/i }.and_return(true)
+        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).with { |branch, action| branch =~ /retain/i }.and_return(true)
+        Socialcast::Gitx::CLI.start ['release']
+      end
+      it 'should post message to socialcast' do end # see expectations
+      it 'should run expected commands' do
+        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+          "git push origin FOO:backport_FOO",
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
