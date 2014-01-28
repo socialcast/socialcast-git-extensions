@@ -7,6 +7,8 @@ require 'socialcast-git-extensions/github'
 module Socialcast
   module Gitx
     DEFAULT_BASE_BRANCH = 'master'
+    DEFAULT_STAGING_BRANCH = 'staging'
+    DEFAULT_PROTOTYPE_BRANCH = 'prototype'
 
     private
     # execute a shell command and raise an error if non-zero exit code is returned
