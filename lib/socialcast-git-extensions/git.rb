@@ -83,7 +83,9 @@ module Socialcast
       # blow away the local aggregate branch to ensure pulling into most recent "clean" branch
       def integrate_branch(branch, destination_branch)
         assert_not_protected_branch!(branch, 'integrate') unless aggregate_branch?(destination_branch)
-        raise "Only aggregate branches are allowed for integration: #{AGGREGATE_BRANCHES}" unless aggregate_branch?(destination_branch) || destination_branch == base_branch
+        unless aggregate_branch?(destination_branch) || [base_branch, Socialcast::Gitx::DEFAULT_BASE_BRANCH].include?(destination_branch)
+          raise "Only aggregate branches are allowed for integration: #{AGGREGATE_BRANCHES}"
+        end
         say "Integrating "
         say "#{branch} ", :green
         say "into "
