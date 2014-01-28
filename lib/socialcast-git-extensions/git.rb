@@ -4,12 +4,9 @@ require 'pathname'
 module Socialcast
   module Gitx
     module Git
-      AGGREGATE_BRANCHES = %w{ staging prototype }
-      RESERVED_BRANCHES = %w{ HEAD master next_release } + AGGREGATE_BRANCHES
-
       private
       def assert_not_protected_branch!(branch, action)
-        raise "Cannot #{action} reserved branch" if RESERVED_BRANCHES.include?(branch) || aggregate_branch?(branch)
+        raise "Cannot #{action} reserved branch" if reserved_branches.include?(branch) || aggregate_branch?(branch)
       end
 
       # lookup the current branch of the PWD
@@ -41,7 +38,7 @@ module Socialcast
         output.each do |branch|
           branch = branch.gsub(/\*/, '').strip.split(' ').first
           branch = branch.split('/').last if options[:remote]
-          branches << branch unless RESERVED_BRANCHES.include?(branch)
+          branches << branch unless reserved_branches.include?(branch)
         end
         branches.uniq
       end
@@ -51,20 +48,20 @@ module Socialcast
       # returns list of branches that were removed
       def nuke_branch(branch, head_branch)
         return [] if branch == head_branch
-        raise "Only aggregate branches are allowed to be reset: #{AGGREGATE_BRANCHES}" unless aggregate_branch?(branch)
+        raise "Only aggregate branches are allowed to be reset: #{aggregate_branches}" unless aggregate_branch?(branch)
         say "Resetting "
         say "#{branch} ", :green
         say "branch to "
         say head_branch, :green
 
-        run_cmd "git checkout #{Socialcast::Gitx::BASE_BRANCH}"
+        run_cmd "git checkout #{base_branch}"
         refresh_branch_from_remote head_branch
         removed_branches = branches(:remote => true, :merged => "origin/#{branch}") - branches(:remote => true, :merged => "origin/#{head_branch}")
         run_cmd "git branch -D #{branch}" rescue nil
         run_cmd "git push origin --delete #{branch}" rescue nil
         run_cmd "git checkout -b #{branch}"
         share_branch branch
-        run_cmd "git checkout #{Socialcast::Gitx::BASE_BRANCH}"
+        run_cmd "git checkout #{base_branch}"
 
         removed_branches
       end
@@ -83,7 +80,9 @@ module Socialcast
       # blow away the local aggregate branch to ensure pulling into most recent "clean" branch
       def integrate_branch(branch, destination_branch)
         assert_not_protected_branch!(branch, 'integrate') unless aggregate_branch?(destination_branch)
-        raise "Only aggregate branches are allowed for integration: #{AGGREGATE_BRANCHES}" unless aggregate_branch?(destination_branch) || destination_branch == Socialcast::Gitx::BASE_BRANCH
+        unless aggregate_branch?(destination_branch) || [base_branch, Socialcast::Gitx::DEFAULT_BASE_BRANCH].include?(destination_branch)
+          raise "Only aggregate branches are allowed for integration: #{aggregate_branches}"
+        end
         say "Integrating "
         say "#{branch} ", :green
         say "into "
@@ -103,12 +102,12 @@ module Socialcast
       end
 
       def aggregate_branch?(branch)
-        AGGREGATE_BRANCHES.include?(branch) || branch.starts_with?('last_known_good')
+        aggregate_branches.include?(branch) || branch.starts_with?('last_known_good')
       end
 
       # build a summary of changes
       def changelog_summary(branch)
-        changes = `git diff --stat origin/#{Socialcast::Gitx::BASE_BRANCH}...#{branch}`.split("\n")
+        changes = `git diff --stat origin/#{base_branch}...#{branch}`.split("\n")
         stats = changes.pop
         if changes.length > 5
           dirs = changes.map do |file_change|
@@ -157,7 +156,7 @@ module Socialcast
           end
         end
       end
-      
+
       # @returns a [Pathname] for the scgitx.yml Config File
       # from either ENV['SCGITX_CONFIG_PATH'] or default $PWD/config/scgitx.yml
       def config_file
@@ -168,6 +167,26 @@ module Socialcast
       # @returns [Hash] of review buddy mapping from Config YML (ex: {'wireframe' => {'socialcast_username' => 'RyanSonnek', 'buddy' => 'vanm'}})
       def review_buddies
         config['review_buddies'] || {}
+      end
+
+      def base_branch
+        config['base_branch'] || Socialcast::Gitx::DEFAULT_BASE_BRANCH
+      end
+
+      def staging_branch
+        config['staging_branch'] || Socialcast::Gitx::DEFAULT_STAGING_BRANCH
+      end
+
+      def prototype_branch
+        config['prototype_branch'] || Socialcast::Gitx::DEFAULT_PROTOTYPE_BRANCH
+      end
+
+      def aggregate_branches
+        @aggregate_branches ||= [staging_branch, prototype_branch]
+      end
+
+      def reserved_branches
+        @reserved_branches ||= %w{ HEAD next_release } + [base_branch] + aggregate_branches
       end
     end
   end
