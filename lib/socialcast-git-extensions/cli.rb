@@ -56,21 +56,21 @@ module Socialcast
         say 'updating '
         say "#{branch} ", :green
         say "to have most recent changes from "
-        say Socialcast::Gitx::BASE_BRANCH, :green
+        say base_branch, :green
 
         run_cmd "git pull origin #{branch}" rescue nil
-        run_cmd "git pull origin #{Socialcast::Gitx::BASE_BRANCH}"
+        run_cmd "git pull origin #{base_branch}"
         run_cmd 'git push origin HEAD'
       end
 
       desc 'cleanup', 'Cleanup branches that have been merged into master from the repo'
       def cleanup
-        run_cmd "git checkout #{Socialcast::Gitx::BASE_BRANCH}"
+        run_cmd "git checkout #{base_branch}"
         run_cmd "git pull"
         run_cmd 'git remote prune origin'
 
         say "Deleting branches that have been merged into "
-        say Socialcast::Gitx::BASE_BRANCH, :green
+        say base_branch, :green
         branches(:merged => true, :remote => true).each do |branch|
           run_cmd "git push origin --delete #{branch}" unless aggregate_branch?(branch)
         end
@@ -98,7 +98,7 @@ module Socialcast
           end
         end
 
-        run_cmd "git checkout #{Socialcast::Gitx::BASE_BRANCH}"
+        run_cmd "git checkout #{base_branch}"
         run_cmd 'git pull'
         run_cmd "git checkout -b #{branch_name}"
 
@@ -158,14 +158,14 @@ module Socialcast
         return unless yes?("Release #{branch} to production? (y/n)", :green)
 
         update
-        run_cmd "git checkout #{Socialcast::Gitx::BASE_BRANCH}"
-        run_cmd "git pull origin #{Socialcast::Gitx::BASE_BRANCH}"
+        run_cmd "git checkout #{base_branch}"
+        run_cmd "git pull origin #{base_branch}"
         run_cmd "git pull . #{branch}"
         run_cmd "git push origin HEAD"
-        integrate_branch('master', 'staging')
+        integrate_branch(base_branch, 'staging')
         cleanup
 
-        post "#worklog releasing #{branch} to production #scgitx"
+        post "#worklog releasing #{branch} to #{base_branch} #scgitx"
       end
 
       private

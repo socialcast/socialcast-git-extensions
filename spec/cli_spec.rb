@@ -126,7 +126,7 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when user confirms release' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to production #scgitx")
+        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.start ['release']
       end
@@ -147,6 +147,36 @@ describe Socialcast::Gitx::CLI do
           "git push origin HEAD",
           "git checkout master",
           "git checkout master",
+          "git pull",
+          "git remote prune origin"
+        ]
+      end
+    end
+
+    context 'with alternative base branch' do
+      before do
+        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
+        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
+        Socialcast::Gitx::CLI.any_instance.stub(:base_branch).and_return('special-master')
+        Socialcast::Gitx::CLI.start ['release']
+      end
+      it 'should post message to socialcast' do end # see expectations
+      it 'should run expected commands' do
+        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+          "git pull origin FOO",
+          "git pull origin special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git pull origin special-master",
+          "git pull . FOO",
+          "git push origin HEAD",
+          "git branch -D staging",
+          "git fetch origin",
+          "git checkout staging",
+          "git pull . special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git checkout special-master",
           "git pull",
           "git remote prune origin"
         ]

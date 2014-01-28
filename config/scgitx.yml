@@ -4,5 +4,7 @@ review_buddies:
     socialcast_username: VanMiranda
     buddy: wireframe
   wireframe:
-    socialcast_username: RyanSonnek 
+    socialcast_username: RyanSonnek
     buddy: vanm
+
+base_branch: master

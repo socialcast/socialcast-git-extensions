@@ -33,11 +33,11 @@ module Socialcast
       # returns the url of the created pull request
       # @see http://developer.github.com/v3/pulls/
       def create_pull_request(token, branch, repo, body)
-        payload = {:title => branch, :base => Socialcast::Gitx::BASE_BRANCH, :head => branch, :body => body}.to_json
+        payload = {:title => branch, :base => base_branch, :head => branch, :body => body}.to_json
         say "Creating pull request for "
         say "#{branch} ", :green
         say "against "
-        say "#{Socialcast::Gitx::BASE_BRANCH} ", :green
+        say "#{base_branch} ", :green
         say "in "
         say repo, :green
         response = RestClient::Request.new(:url => "https://api.github.com/repos/#{repo}/pulls", :method => "POST", :payload => payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
@@ -53,12 +53,12 @@ module Socialcast
         data = JSON.parse e.http_body
         say "Failed to create pull request: #{data['message']}", :red
       end
-      
+
       # @returns [String] socialcast username to assign the review to
       # @returns [nil] when no buddy system configured or user not found
       def socialcast_review_buddy(current_user)
         review_requestor = review_buddies[current_user]
-        
+
         if review_requestor && review_buddies[review_requestor['buddy']]
           review_buddies[review_requestor['buddy']]['socialcast_username']
         end
