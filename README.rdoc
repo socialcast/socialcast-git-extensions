@@ -2,6 +2,9 @@
 
 = Core Git Extensions
 
+=== Install
+  socialcast authenticate --domain (your domain)
+
 === Options
 * --quiet => supress posting message in Socialcast
 
