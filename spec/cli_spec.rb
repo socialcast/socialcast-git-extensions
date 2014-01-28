@@ -57,6 +57,28 @@ describe Socialcast::Gitx::CLI do
         ]
       end
     end
+    context 'when target branch is ommitted with custom prototype branch' do
+      before do
+        Socialcast::Gitx::CLI.any_instance.stub(:prototype_branch).and_return('special-prototype')
+        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog integrating FOO into special-prototype #scgitx")
+        Socialcast::Gitx::CLI.start ['integrate']
+      end
+      it 'should post message to socialcast' do end # see expectations
+      it 'should default to prototype' do
+        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+          "git pull origin FOO",
+          "git pull origin master",
+          "git push origin HEAD",
+          "git branch -D special-prototype",
+          "git fetch origin",
+          "git checkout special-prototype",
+          "git pull . FOO",
+          "git push origin HEAD",
+          "git checkout FOO",
+          "git checkout FOO"
+        ]
+      end
+    end
     context 'when target branch == prototype' do
       before do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog integrating FOO into prototype #scgitx")

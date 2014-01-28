@@ -4,12 +4,9 @@ require 'pathname'
 module Socialcast
   module Gitx
     module Git
-      AGGREGATE_BRANCHES = %w{ staging prototype }
-      RESERVED_BRANCHES = %w{ HEAD master next_release } + AGGREGATE_BRANCHES
-
       private
       def assert_not_protected_branch!(branch, action)
-        raise "Cannot #{action} reserved branch" if RESERVED_BRANCHES.include?(branch) || aggregate_branch?(branch)
+        raise "Cannot #{action} reserved branch" if reserved_branches.include?(branch) || aggregate_branch?(branch)
       end
 
       # lookup the current branch of the PWD
@@ -41,7 +38,7 @@ module Socialcast
         output.each do |branch|
           branch = branch.gsub(/\*/, '').strip.split(' ').first
           branch = branch.split('/').last if options[:remote]
-          branches << branch unless RESERVED_BRANCHES.include?(branch)
+          branches << branch unless reserved_branches.include?(branch)
         end
         branches.uniq
       end
@@ -51,7 +48,7 @@ module Socialcast
       # returns list of branches that were removed
       def nuke_branch(branch, head_branch)
         return [] if branch == head_branch
-        raise "Only aggregate branches are allowed to be reset: #{AGGREGATE_BRANCHES}" unless aggregate_branch?(branch)
+        raise "Only aggregate branches are allowed to be reset: #{aggregate_branches}" unless aggregate_branch?(branch)
         say "Resetting "
         say "#{branch} ", :green
         say "branch to "
@@ -84,7 +81,7 @@ module Socialcast
       def integrate_branch(branch, destination_branch)
         assert_not_protected_branch!(branch, 'integrate') unless aggregate_branch?(destination_branch)
         unless aggregate_branch?(destination_branch) || [base_branch, Socialcast::Gitx::DEFAULT_BASE_BRANCH].include?(destination_branch)
-          raise "Only aggregate branches are allowed for integration: #{AGGREGATE_BRANCHES}"
+          raise "Only aggregate branches are allowed for integration: #{aggregate_branches}"
         end
         say "Integrating "
         say "#{branch} ", :green
@@ -105,7 +102,7 @@ module Socialcast
       end
 
       def aggregate_branch?(branch)
-        AGGREGATE_BRANCHES.include?(branch) || branch.starts_with?('last_known_good')
+        aggregate_branches.include?(branch) || branch.starts_with?('last_known_good')
       end
 
       # build a summary of changes
@@ -174,6 +171,22 @@ module Socialcast
 
       def base_branch
         config['base_branch'] || Socialcast::Gitx::DEFAULT_BASE_BRANCH
+      end
+
+      def staging_branch
+        config['staging_branch'] || Socialcast::Gitx::DEFAULT_STAGING_BRANCH
+      end
+
+      def prototype_branch
+        config['prototype_branch'] || Socialcast::Gitx::DEFAULT_PROTOTYPE_BRANCH
+      end
+
+      def aggregate_branches
+        @aggregate_branches ||= [staging_branch, prototype_branch]
+      end
+
+      def reserved_branches
+        @reserved_branches ||= %w{ HEAD next_release } + [base_branch] + aggregate_branches
       end
     end
   end

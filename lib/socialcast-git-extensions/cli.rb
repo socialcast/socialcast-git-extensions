@@ -111,12 +111,12 @@ module Socialcast
       end
 
       desc 'integrate', 'integrate the current branch into one of the aggregate development branches'
-      def integrate(target_branch = 'prototype')
+      def integrate(target_branch = prototype_branch)
         branch = current_branch
 
         update
         integrate_branch(branch, target_branch)
-        integrate_branch(target_branch, 'prototype') if target_branch == 'staging'
+        integrate_branch(target_branch, prototype_branch) if target_branch == staging_branch
         run_cmd "git checkout #{branch}"
 
         post "#worklog integrating #{branch} into #{target_branch} #scgitx"
@@ -124,8 +124,8 @@ module Socialcast
 
       desc 'promote', '(DEPRECATED) promote the current branch into staging'
       def promote
-        say 'DEPRECATED: Use `git integrate staging` instead', :red
-        integrate 'staging'
+        say "DEPRECATED: Use `git integrate #{staging_branch}` instead", :red
+        integrate staging_branch
       end
 
       desc 'nuke', 'nuke the specified aggregate branch and reset it to a known good state'
@@ -162,7 +162,7 @@ module Socialcast
         run_cmd "git pull origin #{base_branch}"
         run_cmd "git pull . #{branch}"
         run_cmd "git push origin HEAD"
-        integrate_branch(base_branch, 'staging')
+        integrate_branch(base_branch, staging_branch)
         cleanup
 
         post "#worklog releasing #{branch} to #{base_branch} #scgitx"

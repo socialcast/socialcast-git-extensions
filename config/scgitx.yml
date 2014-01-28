@@ -8,3 +8,5 @@ review_buddies:
     buddy: vanm
 
 base_branch: master
+staging_branch: staging
+prototype_branch: prototype
