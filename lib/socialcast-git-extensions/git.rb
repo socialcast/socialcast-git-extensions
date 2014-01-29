@@ -6,7 +6,7 @@ module Socialcast
     module Git
       private
       def assert_not_protected_branch!(branch, action)
-        raise "Cannot #{action} reserved branch" if reserved_branches.include?(branch) || aggregate_branch?(branch)
+        raise "Cannot #{action} reserved branch" if reserved_branch?(branch)
       end
 
       # lookup the current branch of the PWD
@@ -38,7 +38,7 @@ module Socialcast
         output.each do |branch|
           branch = branch.gsub(/\*/, '').strip.split(' ').first
           branch = branch.split('/').last if options[:remote]
-          branches << branch unless reserved_branches.include?(branch)
+          branches << branch unless reserved_branch?(branch)
         end
         branches.uniq
       end
@@ -103,6 +103,10 @@ module Socialcast
 
       def aggregate_branch?(branch)
         aggregate_branches.include?(branch) || branch.starts_with?('last_known_good')
+      end
+
+      def reserved_branch?(branch)
+        aggregate_branch?(branch) || reserved_branches.include?(branch)
       end
 
       # build a summary of changes

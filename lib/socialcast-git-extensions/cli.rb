@@ -72,10 +72,10 @@ module Socialcast
         say "Deleting branches that have been merged into "
         say base_branch, :green
         branches(:merged => true, :remote => true).each do |branch|
-          run_cmd "git push origin --delete #{branch}" unless reserved_branches.include?(branch)
+          run_cmd "git push origin --delete #{branch}" unless reserved_branch?(branch)
         end
         branches(:merged => true).each do |branch|
-          run_cmd "git branch -d #{branch}" unless reserved_branches.include?(branch)
+          run_cmd "git branch -d #{branch}" unless reserved_branch?(branch)
         end
       end
 
