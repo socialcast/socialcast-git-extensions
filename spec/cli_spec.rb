@@ -391,4 +391,21 @@ describe Socialcast::Gitx::CLI do
       ]
     end
   end
+
+  describe '#cleanup' do
+    before do
+      Socialcast::Gitx::CLI.any_instance.should_receive(:branches).with(:merged => true, :remote => true).and_return(['master', 'foobar', 'last_known_good_master'])
+      Socialcast::Gitx::CLI.any_instance.should_receive(:branches).with(:merged => true).and_return(['staging', 'bazquux', 'last_known_good_prototype'])
+      Socialcast::Gitx::CLI.start ['cleanup']
+    end
+    it 'should only cleanup non-reserved branches' do
+      Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        "git checkout master",
+        "git pull",
+        "git remote prune origin",
+        "git push origin --delete foobar",
+        "git branch -d bazquux"
+      ]
+    end
+  end
 end
