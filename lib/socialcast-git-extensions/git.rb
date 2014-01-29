@@ -186,7 +186,7 @@ module Socialcast
       end
 
       def reserved_branches
-        @reserved_branches ||= %w{ HEAD next_release } + [base_branch] + aggregate_branches
+        @reserved_branches ||= %w{ HEAD master next_release } + [base_branch] + aggregate_branches
       end
     end
   end
