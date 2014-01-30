@@ -175,12 +175,90 @@ describe Socialcast::Gitx::CLI do
       end
     end
 
-    context 'with alternative base branch' do
+    context 'with alternative base branch via config file' do
       before do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
-        Socialcast::Gitx::CLI.any_instance.stub(:base_branch).and_return('special-master')
+        Socialcast::Gitx::CLI.any_instance.stub(:config).and_return( { 'base_branch' => 'special-master' })
         Socialcast::Gitx::CLI.start ['release']
+      end
+      it 'should post message to socialcast' do end # see expectations
+      it "treats the alternative base branch as reserved" do
+        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'special-master'
+      end
+      it 'should run expected commands' do
+        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+          "git pull origin FOO",
+          "git pull origin special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git pull origin special-master",
+          "git pull . FOO",
+          "git push origin HEAD",
+          "git branch -D staging",
+          "git fetch origin",
+          "git checkout staging",
+          "git pull . special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git checkout special-master",
+          "git pull",
+          "git remote prune origin"
+        ]
+      end
+    end
+
+    context 'with alternative base branch via environment variable' do
+      before do
+        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
+        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
+        Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({})
+        ENV['BASE_BRANCH'] = 'special-master'
+        Socialcast::Gitx::CLI.start ['release']
+      end
+      after do
+        ENV.delete('BASE_BRANCH')
+      end
+      it "treats the alternative base branch as reserved" do
+        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'special-master'
+      end
+      it 'should post message to socialcast' do end # see expectations
+      it 'should run expected commands' do
+        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+          "git pull origin FOO",
+          "git pull origin special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git pull origin special-master",
+          "git pull . FOO",
+          "git push origin HEAD",
+          "git branch -D staging",
+          "git fetch origin",
+          "git checkout staging",
+          "git pull . special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git checkout special-master",
+          "git pull",
+          "git remote prune origin"
+        ]
+      end
+    end
+
+    context 'with alternative base branch via environment variable overriding base branch in config' do
+      before do
+        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
+        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
+        Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({ 'base_branch' => 'extra-special-master' })
+        ENV['BASE_BRANCH'] = 'special-master'
+        Socialcast::Gitx::CLI.start ['release']
+      end
+      after do
+        ENV.delete('BASE_BRANCH')
+      end
+      it "treats the alternative base branch as reserved" do
+        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'special-master'
+        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'extra-special-master'
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do

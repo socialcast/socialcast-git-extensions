@@ -174,7 +174,7 @@ module Socialcast
       end
 
       def base_branch
-        config['base_branch'] || Socialcast::Gitx::DEFAULT_BASE_BRANCH
+        ENV['BASE_BRANCH'] || config['base_branch'] || Socialcast::Gitx::DEFAULT_BASE_BRANCH
       end
 
       def staging_branch
@@ -190,7 +190,7 @@ module Socialcast
       end
 
       def reserved_branches
-        @reserved_branches ||= %w{ HEAD master next_release } + [base_branch] + aggregate_branches
+        @reserved_branches ||= %w{ HEAD master next_release } + [base_branch, config['base_branch']].compact.uniq + aggregate_branches
       end
     end
   end
