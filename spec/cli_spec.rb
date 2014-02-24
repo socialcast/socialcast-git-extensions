@@ -175,6 +175,18 @@ describe Socialcast::Gitx::CLI do
       end
     end
 
+    context 'with reserved_branches via config file' do
+      before do
+        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
+        Socialcast::Gitx::CLI.any_instance.stub(:config).and_return( { 'reserved_branches' => ['dont-del-me','dont-del-me-2'] })
+        Socialcast::Gitx::CLI.start ['release']
+      end
+      it "treats the alternative base branch as reserved" do
+        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'dont-del-me'
+        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'dont-del-me-2'
+      end
+    end
+
     context 'with alternative base branch via config file' do
       before do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")

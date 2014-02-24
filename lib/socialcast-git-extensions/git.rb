@@ -190,7 +190,7 @@ module Socialcast
       end
 
       def reserved_branches
-        @reserved_branches ||= %w{ HEAD master next_release } + [base_branch, config['base_branch']].compact.uniq + aggregate_branches
+        @reserved_branches ||= %w{ HEAD master next_release } + [base_branch, config['reserved_branches'], config['base_branch']].flatten.compact.uniq + aggregate_branches
       end
     end
   end
