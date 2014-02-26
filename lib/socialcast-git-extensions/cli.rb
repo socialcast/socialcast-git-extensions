@@ -36,10 +36,12 @@ module Socialcast
           "Assigned to @#{buddy}"
         end
 
+        assignee = github_review_buddy(current_user)
+
         description = options[:description] || editor_input(PULL_REQUEST_DESCRIPTION)
         branch = current_branch
         repo = current_repo
-        url = create_pull_request token, branch, repo, description
+        url = create_pull_request token, branch, repo, description, assignee
         say "Pull request created: #{url}"
 
         short_description = description.split("\n").first(5).join("\n")

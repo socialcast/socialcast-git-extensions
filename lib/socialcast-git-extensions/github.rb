@@ -32,7 +32,7 @@ module Socialcast
 
       # returns the url of the created pull request
       # @see http://developer.github.com/v3/pulls/
-      def create_pull_request(token, branch, repo, body)
+      def create_pull_request(token, branch, repo, body, assignee)
         payload = {:title => branch, :base => base_branch, :head => branch, :body => body}.to_json
         say "Creating pull request for "
         say "#{branch} ", :green
@@ -42,11 +42,19 @@ module Socialcast
         say repo, :green
         response = RestClient::Request.new(:url => "https://api.github.com/repos/#{repo}/pulls", :method => "POST", :payload => payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
         data = JSON.parse response.body
+
+        assign_pull_request(token, branch, assignee, data) if assignee ## Unfortunately this needs to be done in a seperate request.
+
         url = data['html_url']
         url
       rescue RestClient::Exception => e
         process_error e
         throw e
+      end
+
+      def assign_pull_request(token, branch, assignee, data)
+        issue_payload = { :title => branch, :assignee => assignee }.to_json
+        RestClient::Request.new(:url => data['issue_url'], :method => "PATCH", :payload => issue_payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
       end
 
       def process_error(e)
@@ -63,6 +71,14 @@ module Socialcast
           review_buddies[review_requestor['buddy']]['socialcast_username']
         end
       end
+
+      def github_review_buddy(current_user)
+        review_requestor = review_buddies[current_user]
+        if review_requestor
+          review_requestor['buddy']
+        end
+      end
+
     end
   end
 end
