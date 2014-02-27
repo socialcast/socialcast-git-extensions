@@ -56,8 +56,8 @@ module Socialcast
         issue_payload = { :title => branch, :assignee => assignee }.to_json
         RestClient::Request.new(:url => data['issue_url'], :method => "PATCH", :payload => issue_payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
       rescue RestClient::Exception => e
-          data = JSON.parse e.http_body
-          say "Failed to assign pull request: #{data['message']}", :red
+        data = JSON.parse e.http_body
+        say "Failed to assign pull request: #{data['message']}", :red
       end
 
       def process_error(e)
