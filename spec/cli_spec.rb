@@ -410,6 +410,76 @@ describe Socialcast::Gitx::CLI do
     end
   end
 
+  describe '#findpr' do
+    before do
+      # https://developer.github.com/v3/search/#search-issues
+      stub_response = {
+        "total_count"=> 280,
+        "items"=> [{
+                     "url" => "https://api.github.com/repos/batterseapower/pinyin-toolkit/issues/132",
+                     "labels_url" => "https://api.github.com/repos/batterseapower/pinyin-toolkit/issues/132/labels{/name}",
+                     "comments_url" => "https://api.github.com/repos/batterseapower/pinyin-toolkit/issues/132/comments",
+                     "events_url" => "https://api.github.com/repos/batterseapower/pinyin-toolkit/issues/132/events",
+                     "html_url" => "https://github.com/batterseapower/pinyin-toolkit/issues/132",
+                     "id" => 35802,
+                     "number" => 132,
+                     "title" => "Line Number Indexes Beyond 20 Not Displayed",
+                     "user" => {
+                       "login" => "Nick3C",
+                       "id" => 90254,
+                       "avatar_url" => "https://secure.gravatar.com/avatar/934442aadfe3b2f4630510de416c5718?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+                       "gravatar_id" => "934442aadfe3b2f4630510de416c5718",
+                       "url" => "https://api.github.com/users/Nick3C",
+                       "html_url" => "https://github.com/Nick3C",
+                       "followers_url" => "https://api.github.com/users/Nick3C/followers",
+                       "following_url" => "https://api.github.com/users/Nick3C/following{/other_user}",
+                       "gists_url" => "https://api.github.com/users/Nick3C/gists{/gist_id}",
+                       "starred_url" => "https://api.github.com/users/Nick3C/starred{/owner}{/repo}",
+                       "subscriptions_url" => "https://api.github.com/users/Nick3C/subscriptions",
+                       "organizations_url" => "https://api.github.com/users/Nick3C/orgs",
+                       "repos_url" => "https://api.github.com/users/Nick3C/repos",
+                       "events_url" => "https://api.github.com/users/Nick3C/events{/privacy}",
+                       "received_events_url" => "https://api.github.com/users/Nick3C/received_events",
+                       "type" => "User"
+                     },
+                     "labels" => [{
+                                    "url" => "https://api.github.com/repos/batterseapower/pinyin-toolkit/labels/bug",
+                                    "name" => "bug",
+                                    "color" => "ff0000"
+                                  }],
+                     "state" => "open",
+                     "assignee" => nil,
+                     "milestone" => nil,
+                     "comments" => 15,
+                     "created_at" => "2009-07-12T20:10:41Z",
+                     "updated_at" => "2009-07-19T09:23:43Z",
+                     "closed_at" => nil,
+                     "pull_request" => {
+                       "html_url" => nil,
+                       "diff_url" => nil,
+                       "patch_url" => nil
+                     },
+                     "body" => "...",
+                     "score" => 1.3859273
+                   }]
+      }
+
+      stub_request(:get, "https://api.github.com/search/issues?q=abc123%20type:pr%20repo:socialcast/socialcast-git-extensions").
+        with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token 8e1936680681828863c314e955acefcb6c25b887', 'Content-Type'=>'application/json', 'User-Agent'=>'Ruby'}).
+        to_return(:status => 200, :body => stub_response.to_json, :headers => {})
+      Socialcast::Gitx::CLI.any_instance.should_receive(:findpr).and_call_original
+      Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
+        @said_text = @said_text.to_s + message
+      end
+      Socialcast::Gitx::CLI.start ['findpr', 'abc123']
+    end
+    it 'fetches the data from github and prints it out' do
+      @said_text.should include "https://github.com/batterseapower/pinyin-toolkit/issues/132"
+      @said_text.should include "Nick3C"
+      @said_text.should include "Line Number Indexes Beyond 20 Not Displayed"
+    end
+  end
+
   describe '#reviewrequest' do
     context 'when there are no review_buddies specified' do
       before do

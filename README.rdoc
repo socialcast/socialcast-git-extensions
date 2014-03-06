@@ -20,6 +20,10 @@ update the local feature branch with latest remote changes plus upstream release
 
 integrate the current feature branch into an aggregate branch (ex: prototype, staging)
 
+== git findpr <commit_hash>
+
+Find pull requests on github including a given commit
+
 == git reviewrequest
 
 create a pull request on github for peer review of the current branch.

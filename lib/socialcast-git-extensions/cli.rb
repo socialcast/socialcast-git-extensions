@@ -49,6 +49,22 @@ module Socialcast
         post review_message, :url => url, :message_type => 'review_request'
       end
 
+      desc "findpr", "Find pull requests including a given commit"
+      def findpr(commit_hash)
+        token = authorization_token
+        repo = current_repo
+        data = pull_requests_for_commit(token, repo, commit_hash)
+
+        if data['items']
+          data['items'].each do |entry|
+            say "\n" << [entry['html_url'], entry['title'], "#{entry['user'] && entry['user']['login']} #{entry['created_at']}"].join("\n\t")
+          end
+        else
+          say "No results found", :yellow
+        end
+
+      end
+
       # TODO: use --no-edit to skip merge messages
       # TODO: use pull --rebase to skip merge commit
       desc 'update', 'Update the current branch with latest changes from the remote feature branch and master'
