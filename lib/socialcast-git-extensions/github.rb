@@ -52,8 +52,8 @@ module Socialcast
         throw e
       end
 
-      # print the PRs matching the given commit hash
-      # @see http://developer.github.com/v3/pulls/
+      # find the PRs matching the given commit hash
+      # https://developer.github.com/v3/search/#search-issues
       def pull_requests_for_commit(token, repo, commit_hash)
         query = "#{commit_hash}+type:pr+repo:#{repo}"
         say "Searching github pull requests for #{commit_hash}"
