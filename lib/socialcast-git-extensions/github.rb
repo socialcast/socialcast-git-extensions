@@ -52,6 +52,18 @@ module Socialcast
         throw e
       end
 
+      # find the PRs matching the given commit hash
+      # https://developer.github.com/v3/search/#search-issues
+      def pull_requests_for_commit(token, repo, commit_hash)
+        query = "#{commit_hash}+type:pr+repo:#{repo}"
+        say "Searching github pull requests for #{commit_hash}"
+        response = RestClient::Request.new(:url => "https://api.github.com/search/issues?q=#{query}", :method => "GET", :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
+        JSON.parse response.body
+      rescue RestClient::Exception => e
+        process_error e
+        throw e
+      end
+
       def assign_pull_request(token, branch, assignee, data)
         issue_payload = { :title => branch, :assignee => assignee }.to_json
         RestClient::Request.new(:url => data['issue_url'], :method => "PATCH", :payload => issue_payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
