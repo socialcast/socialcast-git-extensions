@@ -173,6 +173,10 @@ module Socialcast
         config['review_buddies'] || {}
       end
 
+      def specialty_reviewers
+        config['specialty_reviewers'] || {}
+      end
+
       def base_branch
         ENV['BASE_BRANCH'] || config['base_branch'] || Socialcast::Gitx::DEFAULT_BASE_BRANCH
       end

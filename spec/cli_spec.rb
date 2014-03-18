@@ -511,6 +511,7 @@ describe Socialcast::Gitx::CLI do
             to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1"}), :headers => {})
 
           stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
+          $terminal.stub(:ask).and_return(' ')
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing']
         end
         it 'should create github pull request' do end # see expectations
@@ -533,7 +534,8 @@ describe Socialcast::Gitx::CLI do
         stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
 
         # The Review Buddy should be @mentioned in the message
-        stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\nAssigned to @VanMiranda\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
+        stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\nAssigned to @VanMiranda\nAssigned additionally to @ChristieHeikkinen for Designer review\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
+        $terminal.stub(:ask).and_return('d')
         Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing']
       end
       it 'should create github pull request' do end # see expectations
