@@ -465,7 +465,7 @@ describe Socialcast::Gitx::CLI do
       }
 
       stub_request(:get, "https://api.github.com/search/issues?q=abc123%20type:pr%20repo:socialcast/socialcast-git-extensions").
-        with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token 8e1936680681828863c314e955acefcb6c25b887', 'Content-Type'=>'application/json', 'User-Agent'=>'Ruby'}).
+        with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>/token\s\w+/, 'Content-Type'=>'application/json', 'User-Agent'=>'Ruby'}).
         to_return(:status => 200, :body => stub_response.to_json, :headers => {})
       Socialcast::Gitx::CLI.any_instance.should_receive(:findpr).and_call_original
       Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
@@ -508,7 +508,9 @@ describe Socialcast::Gitx::CLI do
     context 'when review_buddies are specified via a /config YML file' do
       before do
         stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-          to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1"}), :headers => {})
+          to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://github.com/repos/repo/project/issues/1"}), :headers => {})
+
+        stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
 
         # The Review Buddy should be @mentioned in the message
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\nAssigned to @VanMiranda\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request')
