@@ -150,6 +150,7 @@ describe Socialcast::Gitx::CLI do
       before do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
+        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'should post message to socialcast' do end # see expectations
@@ -167,10 +168,7 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . master",
           "git push origin HEAD",
-          "git checkout master",
-          "git checkout master",
-          "git pull",
-          "git remote prune origin"
+          "git checkout master"
         ]
       end
     end
@@ -192,6 +190,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return( { 'base_branch' => 'special-master' })
+        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'should post message to socialcast' do end # see expectations
@@ -212,10 +211,7 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . special-master",
           "git push origin HEAD",
-          "git checkout special-master",
-          "git checkout special-master",
-          "git pull",
-          "git remote prune origin"
+          "git checkout special-master"
         ]
       end
     end
@@ -225,6 +221,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({})
+        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
         ENV['BASE_BRANCH'] = 'special-master'
         Socialcast::Gitx::CLI.start ['release']
       end
@@ -249,10 +246,7 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . special-master",
           "git push origin HEAD",
-          "git checkout special-master",
-          "git checkout special-master",
-          "git pull",
-          "git remote prune origin"
+          "git checkout special-master"
         ]
       end
     end
@@ -262,6 +256,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({ 'base_branch' => 'extra-special-master' })
+        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
         ENV['BASE_BRANCH'] = 'special-master'
         Socialcast::Gitx::CLI.start ['release']
       end
@@ -287,10 +282,7 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . special-master",
           "git push origin HEAD",
-          "git checkout special-master",
-          "git checkout special-master",
-          "git pull",
-          "git remote prune origin"
+          "git checkout special-master"
         ]
       end
     end
