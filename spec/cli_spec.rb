@@ -13,11 +13,23 @@ describe Socialcast::Gitx::CLI do
     end
   end
 
+  def stub_message(message_body, params = {})
+    json_body = { :message => { :body => message_body }.merge(params) }
+
+    stub_request(:post, "https://testuser:testpassword@testdomain/api/messages.json")
+      .with(json_body)
+      .to_return(:status => 200)
+  end
+
   before do
+    Socialcast::Gitx::CLI.instance_eval do # to supress warning from stubbing ldap_config
+      @no_tasks = @no_commands = true
+    end
+
     Socialcast::Gitx::CLI.stubbed_executed_commands = []
     Socialcast::Gitx::CLI.any_instance.stub(:current_branch).and_return('FOO')
     Socialcast::Gitx::CLI.any_instance.stub(:current_user).and_return('wireframe')
-    Socialcast::Gitx::CLI.any_instance.stub(:post)
+    Socialcast::CommandLine.stub(:credentials).and_return(:domain => 'testdomain', :user => 'testuser', :password => 'testpassword', :scgitx_token => 'faketoken')
   end
 
   describe '#update' do
@@ -38,7 +50,8 @@ describe Socialcast::Gitx::CLI do
   describe '#integrate' do
     context 'when target branch is ommitted' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog integrating FOO into prototype #scgitx")
+        stub_message "#worklog integrating FOO into prototype #scgitx"
+
         Socialcast::Gitx::CLI.start ['integrate']
       end
       it 'should post message to socialcast' do end # see expectations
@@ -60,7 +73,9 @@ describe Socialcast::Gitx::CLI do
     context 'when target branch is ommitted with custom prototype branch' do
       before do
         Socialcast::Gitx::CLI.any_instance.stub(:prototype_branch).and_return('special-prototype')
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog integrating FOO into special-prototype #scgitx")
+
+        stub_message "#worklog integrating FOO into special-prototype #scgitx"
+
         Socialcast::Gitx::CLI.start ['integrate']
       end
       it 'should post message to socialcast' do end # see expectations
@@ -81,7 +96,8 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when target branch == prototype' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog integrating FOO into prototype #scgitx")
+        stub_message "#worklog integrating FOO into prototype #scgitx"
+
         Socialcast::Gitx::CLI.start ['integrate', 'prototype']
       end
       it 'should post message to socialcast' do end # see expectations
@@ -102,7 +118,8 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when target branch == staging' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog integrating FOO into staging #scgitx")
+        stub_message "#worklog integrating FOO into staging #scgitx"
+
         Socialcast::Gitx::CLI.start ['integrate', 'staging']
       end
       it 'should post message to socialcast' do end # see expectations
@@ -148,7 +165,8 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when user confirms release' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to master #scgitx")
+        stub_message "#worklog releasing FOO to master #scgitx"
+
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
@@ -175,6 +193,7 @@ describe Socialcast::Gitx::CLI do
 
     context 'with reserved_branches via config file' do
       before do
+        stub_message "#worklog releasing FOO to master #scgitx"
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return( { 'reserved_branches' => ['dont-del-me','dont-del-me-2'] })
         Socialcast::Gitx::CLI.start ['release']
@@ -187,7 +206,8 @@ describe Socialcast::Gitx::CLI do
 
     context 'with alternative base branch via config file' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
+        stub_message "#worklog releasing FOO to special-master #scgitx"
+
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return( { 'base_branch' => 'special-master' })
         Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
@@ -218,7 +238,8 @@ describe Socialcast::Gitx::CLI do
 
     context 'with alternative base branch via environment variable' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
+        stub_message "#worklog releasing FOO to special-master #scgitx"
+
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({})
         Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
@@ -253,7 +274,8 @@ describe Socialcast::Gitx::CLI do
 
     context 'with alternative base branch via environment variable overriding base branch in config' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
+        stub_message "#worklog integrating FOO to special-master #scgitx"
+
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({ 'base_branch' => 'extra-special-master' })
         Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
@@ -294,7 +316,7 @@ describe Socialcast::Gitx::CLI do
         prototype_branches = %w( dev-foo dev-bar )
         master_branches = %w( dev-foo )
         Socialcast::Gitx::CLI.any_instance.should_receive(:branches).and_return(prototype_branches, master_branches, prototype_branches, master_branches)
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog resetting prototype branch to last_known_good_master #scgitx\n/cc @SocialcastDevelopers\n\nthe following branches were affected:\n* dev-bar")
+        stub_message "#worklog resetting prototype branch to last_known_good_master #scgitx\n/cc @SocialcastDevelopers\n\nthe following branches were affected:\n* dev-bar"
         Socialcast::Gitx::CLI.start ['nuke', 'prototype', '--destination', 'master']
       end
       it 'should publish message into socialcast' do end # see expectations
@@ -325,6 +347,8 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when target branch == staging and --destination == last_known_good_staging' do
       before do
+        stub_message "#worklog resetting staging branch to last_known_good_staging #scgitx\\n/cc @SocialcastDevelopers"
+
         Socialcast::Gitx::CLI.start ['nuke', 'staging', '--destination', 'last_known_good_staging']
       end
       it 'should run expected commands' do
@@ -344,6 +368,8 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when target branch == prototype and destination prompt == nil' do
       before do
+        stub_message "#worklog resetting prototype branch to last_known_good_prototype #scgitx\n/cc @SocialcastDevelopers"
+
         Socialcast::Gitx::CLI.any_instance.should_receive(:ask).and_return('')
         Socialcast::Gitx::CLI.start ['nuke', 'prototype']
       end
@@ -364,6 +390,8 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when target branch == prototype and destination prompt = master' do
       before do
+        stub_message "#worklog resetting prototype branch to last_known_good_master #scgitx\n/cc @SocialcastDevelopers"
+
         Socialcast::Gitx::CLI.any_instance.should_receive(:ask).and_return('master')
         Socialcast::Gitx::CLI.start ['nuke', 'prototype']
       end
@@ -397,7 +425,7 @@ describe Socialcast::Gitx::CLI do
         lambda {
           Socialcast::Gitx::CLI.any_instance.should_receive(:ask).and_return('master')
           Socialcast::Gitx::CLI.start ['nuke', 'asdfasdf']
-        }.should raise_error /Only aggregate branches are allowed to be reset/
+        }.should raise_error(/Only aggregate branches are allowed to be reset/)
       end
     end
   end
@@ -482,7 +510,7 @@ describe Socialcast::Gitx::CLI do
           stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
             to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1"}), :headers => {})
 
-          Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request')
+          stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing']
         end
         it 'should create github pull request' do end # see expectations
@@ -505,7 +533,7 @@ describe Socialcast::Gitx::CLI do
         stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
 
         # The Review Buddy should be @mentioned in the message
-        Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\nAssigned to @VanMiranda\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request')
+        stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\nAssigned to @VanMiranda\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
         Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing']
       end
       it 'should create github pull request' do end # see expectations
@@ -522,6 +550,7 @@ describe Socialcast::Gitx::CLI do
 
   describe '#promote' do
     before do
+      stub_message "#worklog integrating FOO into staging #scgitx"
       Socialcast::Gitx::CLI.start ['promote']
     end
     it 'should integrate into staging' do
