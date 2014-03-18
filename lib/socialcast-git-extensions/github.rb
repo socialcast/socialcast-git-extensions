@@ -12,7 +12,7 @@ module Socialcast
       # @see http://developer.github.com/v3/oauth/#scopes
       # @see http://developer.github.com/v3/#user-agent-required
       def authorization_token
-        credentials = Socialcast.credentials
+        credentials = Socialcast::CommandLine.credentials
         return credentials[:scgitx_token] if credentials[:scgitx_token]
 
         username = current_user
@@ -23,7 +23,7 @@ module Socialcast
         response = RestClient::Request.new(:url => "https://api.github.com/authorizations", :method => "POST", :user => username, :password => password, :payload => payload, :headers => {:accept => :json, :content_type => :json, :user_agent => 'socialcast-git-extensions'}).execute
         data = JSON.parse response.body
         token = data['token']
-        Socialcast.credentials = credentials.merge(:scgitx_token => token)
+        Socialcast::CommandLine.credentials = credentials.merge(:scgitx_token => token)
         token
       rescue RestClient::Exception => e
         process_error e
