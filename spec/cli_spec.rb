@@ -16,9 +16,9 @@ describe Socialcast::Gitx::CLI do
   def stub_message(message_body, params = {})
     json_body = { :message => { :body => message_body }.merge(params) }
 
-    stub_request(:post, "https://testuser:testpassword@testdomain/api/messages.json").
-      with(json_body).
-      to_return(:status => 200)
+    stub_request(:post, "https://testuser:testpassword@testdomain/api/messages.json")
+      .with(json_body)
+      .to_return(:status => 200)
   end
 
   before do
