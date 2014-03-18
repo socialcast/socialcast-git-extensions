@@ -29,7 +29,7 @@ describe Socialcast::Gitx::CLI do
     Socialcast::Gitx::CLI.stubbed_executed_commands = []
     Socialcast::Gitx::CLI.any_instance.stub(:current_branch).and_return('FOO')
     Socialcast::Gitx::CLI.any_instance.stub(:current_user).and_return('wireframe')
-    Socialcast::CommandLine.stub(:credentials).and_return({ :domain => 'testdomain', :user => 'testuser', :password => 'testpassword', :scgitx_token => 'faketoken' })
+    Socialcast::CommandLine.stub(:credentials).and_return(:domain => 'testdomain', :user => 'testuser', :password => 'testpassword', :scgitx_token => 'faketoken')
   end
 
   describe '#update' do
