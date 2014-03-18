@@ -14,6 +14,10 @@ describe Socialcast::Gitx::CLI do
   end
 
   before do
+    Socialcast::Gitx::CLI.instance_eval do # to supress warning from stubbing ldap_config
+      @no_tasks = @no_commands = true
+    end
+
     Socialcast::Gitx::CLI.stubbed_executed_commands = []
     Socialcast::Gitx::CLI.any_instance.stub(:current_branch).and_return('FOO')
     Socialcast::Gitx::CLI.any_instance.stub(:current_user).and_return('wireframe')
