@@ -150,6 +150,7 @@ describe Socialcast::Gitx::CLI do
       before do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
+        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'should post message to socialcast' do end # see expectations
@@ -167,10 +168,7 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . master",
           "git push origin HEAD",
-          "git checkout master",
-          "git checkout master",
-          "git pull",
-          "git remote prune origin"
+          "git checkout master"
         ]
       end
     end
@@ -192,6 +190,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return( { 'base_branch' => 'special-master' })
+        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'should post message to socialcast' do end # see expectations
@@ -212,10 +211,7 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . special-master",
           "git push origin HEAD",
-          "git checkout special-master",
-          "git checkout special-master",
-          "git pull",
-          "git remote prune origin"
+          "git checkout special-master"
         ]
       end
     end
@@ -225,6 +221,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({})
+        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
         ENV['BASE_BRANCH'] = 'special-master'
         Socialcast::Gitx::CLI.start ['release']
       end
@@ -249,10 +246,7 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . special-master",
           "git push origin HEAD",
-          "git checkout special-master",
-          "git checkout special-master",
-          "git pull",
-          "git remote prune origin"
+          "git checkout special-master"
         ]
       end
     end
@@ -262,6 +256,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#worklog releasing FOO to special-master #scgitx")
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({ 'base_branch' => 'extra-special-master' })
+        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
         ENV['BASE_BRANCH'] = 'special-master'
         Socialcast::Gitx::CLI.start ['release']
       end
@@ -287,10 +282,7 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . special-master",
           "git push origin HEAD",
-          "git checkout special-master",
-          "git checkout special-master",
-          "git pull",
-          "git remote prune origin"
+          "git checkout special-master"
         ]
       end
     end
@@ -465,7 +457,7 @@ describe Socialcast::Gitx::CLI do
       }
 
       stub_request(:get, "https://api.github.com/search/issues?q=abc123%20type:pr%20repo:socialcast/socialcast-git-extensions").
-        with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token 8e1936680681828863c314e955acefcb6c25b887', 'Content-Type'=>'application/json', 'User-Agent'=>'Ruby'}).
+        with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>/token\s\w+/, 'Content-Type'=>'application/json', 'User-Agent'=>'Ruby'}).
         to_return(:status => 200, :body => stub_response.to_json, :headers => {})
       Socialcast::Gitx::CLI.any_instance.should_receive(:findpr).and_call_original
       Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
@@ -508,7 +500,9 @@ describe Socialcast::Gitx::CLI do
     context 'when review_buddies are specified via a /config YML file' do
       before do
         stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-          to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1"}), :headers => {})
+          to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://github.com/repos/repo/project/issues/1"}), :headers => {})
+
+        stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
 
         # The Review Buddy should be @mentioned in the message
         Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\nAssigned to @VanMiranda\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request')

@@ -193,7 +193,7 @@ module Socialcast
       def post(message, params = {})
         return if options[:quiet]
         require 'socialcast'
-        require 'socialcast/message'
+        require 'socialcast/command_line/message'
         ActiveResource::Base.logger = Logger.new(STDOUT) if options[:trace]
         Socialcast::Message.configure_from_credentials
         Socialcast::Message.create params.merge(:body => message)
