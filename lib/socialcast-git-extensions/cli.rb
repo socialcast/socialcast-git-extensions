@@ -1,6 +1,8 @@
 require "thor"
 require 'rest_client'
 require 'socialcast-git-extensions'
+require 'socialcast'
+require 'socialcast/command_line/message'
 
 module Socialcast
   module Gitx
@@ -192,11 +194,9 @@ module Socialcast
       # skip sharing message if CLI quiet option is present
       def post(message, params = {})
         return if options[:quiet]
-        require 'socialcast'
-        require 'socialcast/command_line/message'
         ActiveResource::Base.logger = Logger.new(STDOUT) if options[:trace]
-        Socialcast::Message.configure_from_credentials
-        Socialcast::Message.create params.merge(:body => message)
+        Socialcast::CommandLine::Message.configure_from_credentials
+        Socialcast::CommandLine::Message.create params.merge(:body => message)
         say "Message has been posted"
       end
     end
