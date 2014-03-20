@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'ostruct'
 require 'bundler/setup'
 require 'rspec/mocks'
 require 'webmock/rspec'
@@ -9,6 +10,11 @@ require 'socialcast-git-extensions/cli'
 
 RSpec.configure do |config|
   config.mock_with :rspec
+
+  config.before do
+    ## Needed because object does not have permalink url until after it has been posted
+    Socialcast::CommandLine::Message.any_instance.stub(:permalink_url).and_return('http://demo.socialcast.com/messages/123')
+  end
 
   def capture_with_status(stream)
     exit_status = 0

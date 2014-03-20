@@ -14,11 +14,11 @@ describe Socialcast::Gitx::CLI do
   end
 
   def stub_message(message_body, params = {})
-    json_body = { :message => { :body => message_body }.merge(params) }
+    json_body = { :message => { :body => message_body }.merge!(params) }
 
     stub_request(:post, "https://testuser:testpassword@testdomain/api/messages.json")
-      .with(json_body)
-      .to_return(:status => 200)
+      .with(:body => json_body)
+      .to_return(:status => 200, :body => '', :headers => {})
   end
 
   before do
@@ -274,7 +274,7 @@ describe Socialcast::Gitx::CLI do
 
     context 'with alternative base branch via environment variable overriding base branch in config' do
       before do
-        stub_message "#worklog integrating FOO to special-master #scgitx"
+        stub_message "#worklog releasing FOO to special-master #scgitx"
 
         Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
         Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({ 'base_branch' => 'extra-special-master' })
@@ -347,7 +347,7 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when target branch == staging and --destination == last_known_good_staging' do
       before do
-        stub_message "#worklog resetting staging branch to last_known_good_staging #scgitx\\n/cc @SocialcastDevelopers"
+        stub_message "#worklog resetting staging branch to last_known_good_staging #scgitx\n/cc @SocialcastDevelopers"
 
         Socialcast::Gitx::CLI.start ['nuke', 'staging', '--destination', 'last_known_good_staging']
       end
@@ -511,8 +511,7 @@ describe Socialcast::Gitx::CLI do
             to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1"}), :headers => {})
 
           stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
-          $terminal.stub(:ask).and_return(' ')
-          Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing']
+          Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
         end
         it 'should create github pull request' do end # see expectations
         it 'should post socialcast message' do end # see expectations
@@ -530,22 +529,33 @@ describe Socialcast::Gitx::CLI do
       before do
         stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
           to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://github.com/repos/repo/project/issues/1"}), :headers => {})
-
         stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
-
-        # The Review Buddy should be @mentioned in the message
-        stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\nAssigned to @VanMiranda\nAssigned additionally to @ChristieHeikkinen for Designer review\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
-        $terminal.stub(:ask).and_return('d')
-        Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing']
       end
-      it 'should create github pull request' do end # see expectations
-      it 'should post socialcast message' do end # see expectations
-      it 'should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
-          "git pull origin FOO",
-          "git pull origin master",
-          "git push origin HEAD"
-        ]
+      context 'and additional reviewers are specified' do
+        let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\n\nAssigned additionally to @JohnSmith for API review\n\ntesting\n\n" }
+        before do
+          # The Review Buddy should be @mentioned in the message
+          stub_message message_body, :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
+          Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-a', 'a']
+        end
+        it 'should create github pull request' do end # see expectations
+        it 'should post socialcast message' do end # see expectations
+        it 'should run expected commands' do
+          Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+            "git pull origin FOO",
+            "git pull origin master",
+            "git push origin HEAD"
+          ]
+        end
+      end
+      context 'and additional reviewers are not specified' do
+        let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n" }
+        before do
+          # The Review Buddy should be @mentioned in the message
+          stub_message message_body, :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
+          Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+        end
+        it 'should create github pull request' do end # see expectations
       end
     end
   end

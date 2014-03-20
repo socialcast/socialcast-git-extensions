@@ -45,8 +45,7 @@ review_buddies:
 In this example, when Emily runs `git reviewrequest` from her local machine, @BobDavis will receive an @mention in Socialcast notifying him to review her branch.  If Bob runs the command, Emily will receive a notice in Socialcast.
 
 Additionally you can specify a specialty reviewer, such that you can
-notify individuals in your organization with a specific skill set. Like
-Security, or API's
+notify individuals in your organization with a specific skill set. Like Security, or API's
 
 ``` yaml
 specialty_reviewers:

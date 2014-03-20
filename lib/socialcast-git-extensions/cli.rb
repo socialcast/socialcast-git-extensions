@@ -29,8 +29,8 @@ module Socialcast
 
       desc "reviewrequest", "Create a pull request on github"
       method_option :description, :type => :string, :aliases => '-d', :desc => 'pull request description'
-      method_option :additional_reviewers, :type => :string, :aliases => '-ar', :desc => 'add additional reviewers to mention automatically'
-      method_option :skip_additional_reviewers, :type => :string, :aliases => '-skip-add-reviewers', :desc => 'add additional reviewers to mention automatically'
+      method_option :additional_reviewers, :type => :string, :aliases => '-a', :desc => 'add additional reviewers to mention automatically, and skips the prompt'
+      method_option :skip_additional_reviewers, :type => :string, :aliases => '-s', :desc => 'Skips adding additional reviewers'
       # @see http://developer.github.com/v3/pulls/
       def reviewrequest(*additional_reviewers)
         token = authorization_token
@@ -41,13 +41,15 @@ module Socialcast
           "Assigned to @#{buddy}"
         end
 
-        if !specialty_reviewers.empty?
+        if !specialty_reviewers.empty? && !options.key?('skip_additional_reviewers')
           additional_reviewers = options[:additional_reviewers] || additional_reviewers
 
           if additional_reviewers.empty?
             prompt_text = "#{specialty_reviewers.map { |_,v| v['command'] }.join(", ")} or (or hit enter to continue): "
-            additional_reviewers = $terminal.ask("Notify additional people? #{prompt_text} ").split(" ")
+            additional_reviewers = $terminal.ask("Notify additional people? #{prompt_text} ")
           end
+
+          additional_reviewers = additional_reviewers.is_a?(String) ? additional_reviewers.split(" ") : additional_reviewers
 
           (specialty_reviewers.keys & additional_reviewers).each do |command|
             reviewer = specialty_reviewers[command]
@@ -55,8 +57,6 @@ module Socialcast
             review_mention += "\nAssigned additionally to @#{reviewer['socialcast_username']} for #{reviewer['label']} review"
           end
         end
-
-        puts review_mention
 
         assignee = github_review_buddy(current_user)
 
@@ -215,8 +215,8 @@ module Socialcast
         return if options[:quiet]
         ActiveResource::Base.logger = Logger.new(STDOUT) if options[:trace]
         Socialcast::CommandLine::Message.configure_from_credentials
-        Socialcast::CommandLine::Message.create params.merge(:body => message)
-        say "Message has been posted"
+        response = Socialcast::CommandLine::Message.create params.merge(:body => message)
+        say "Message has been posted: #{response.permalink_url}"
       end
     end
   end
