@@ -30,7 +30,7 @@ Find pull requests on github including a given commit
 create a pull request on github for peer review of the current branch.
 
 ### Optional:
-Specify a Review Buddy mapping that will reference the local Github username and @mention a pre-assigned review buddy in the Socialcast Review Request message.  Specify the mapping by creating a Configuration YML file relative to the Repo Root: config/scgitx.yml with the following format:
+Specify a Review Buddy mapping that will reference the local Github username and @mention a pre-assigned review buddy in the Socialcast Review Request message.  Specify the mapping by creating a .scgitx YML file relative to the Repo Root: config/scgitx.yml with the following format:
 
 ```yaml
 review_buddies:
