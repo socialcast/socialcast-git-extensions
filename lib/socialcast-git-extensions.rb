@@ -11,11 +11,13 @@ module Socialcast
     DEFAULT_PROTOTYPE_BRANCH = 'prototype'
 
     private
+
     # execute a shell command and raise an error if non-zero exit code is returned
     def run_cmd(cmd)
       say "\n$ "
       say cmd.gsub("'", ''), :red
       raise "#{cmd} failed" unless system cmd
     end
+
   end
 end
