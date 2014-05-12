@@ -84,7 +84,32 @@ module Socialcast
         else
           say "No results found", :yellow
         end
+      end
 
+      desc "backportpr", "Backport a pull request based on a previous branch"
+      def backportpr(pull_request_num, maintenance_branch)
+        ENV['BASE_BRANCH'] = maintenance_branch
+        token = authorization_token
+        repo = current_repo
+
+        pull_request_data = JSON.parse RestClient::Request.new(:url => "https://api.github.com/repos/#{current_repo}/pulls/#{pull_request_num}", :method => "GET", :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
+
+        commits_url = pull_request_data['commits_url']
+        commits_data = JSON.parse RestClient::Request.new(:url => commits_url, :method => "GET", :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
+        non_merge_commits_data = commits_data.select { |commit_data| commit_data['parents'].length == 1 }
+        shas = non_merge_commits_data.map { |commit| commit['sha'] }
+
+        grit_repo = Grit::Repo.new(Dir.pwd)
+        grit_repo.git.native :checkout, { :raise => true }, maintenance_branch
+
+        backport_branch = "backport_#{pull_request_num}_to_#{maintenance_branch}"
+        grit_repo.git.native :checkout, { :b => true, :raise => true }, backport_branch
+        grit_repo.git.native :cherry_pick, { :raise => true }, *shas
+        grit_repo.git.native :push, { :raise => true }, 'origin', backport_branch
+
+        description = "Backport ##{pull_request_num} to https://github.com/#{repo}/tree/#{maintenance_branch}\n\n=======\n\n#{pull_request_data['body']}"
+        assignee = nil
+        create_pull_request(token, backport_branch, repo, description, assignee)
       end
 
       # TODO: use --no-edit to skip merge messages
