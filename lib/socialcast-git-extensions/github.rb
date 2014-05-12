@@ -41,7 +41,7 @@ module Socialcast
         say "in "
         say repo, :green
         data = github_api_request("POST", "repos/#{repo}/pulls", payload)
-        assign_pull_request(token, branch, assignee, data) if assignee ## Unfortunately this needs to be done in a seperate request.
+        assign_pull_request(branch, assignee, data) if assignee ## Unfortunately this needs to be done in a seperate request.
 
         url = data['html_url']
         url
@@ -58,7 +58,8 @@ module Socialcast
       def assign_pull_request(branch, assignee, data)
         issue_payload = { :title => branch, :assignee => assignee }.to_json
         github_api_request "PATCH", data['issue_url'], issue_payload
-        say "Failed to assign pull request", :red
+      rescue => e
+        say "Failed to assign pull request: #{e.message}", :red
       end
 
       # @returns [String] socialcast username to assign the review to
@@ -88,9 +89,7 @@ module Socialcast
       # @returns [nil] when user not found
       def socialcast_track_reviewer(track)
         specialty_reviewers.values.each do |reviewer_hash|
-          if reviewer_hash['label'].to_s.downcase == track.downcase
-            return reviewer_hash['socialcast_username']
-          end
+          return reviewer_hash['socialcast_username'] if reviewer_hash['label'].to_s.downcase == track.downcase
         end
         nil
       end
@@ -101,9 +100,7 @@ module Socialcast
         return if socialcast_username.nil? || socialcast_username == ""
 
         review_buddies.each_pair do |github_username, review_buddy_hash|
-          if review_buddy_hash['socialcast_username'] == socialcast_username
-            return github_username
-          end
+          return github_username if review_buddy_hash['socialcast_username'] == socialcast_username
         end
       end
 

@@ -104,9 +104,9 @@ module Socialcast
 
         pull_request_url = create_pull_request(backport_branch, repo, description, assignee)
 
-        review_message = ["#reviewrequest backport #{pull_request_data['html_url']} to #{maintenance_branch} #scgitx"]
+        review_message = ["#reviewrequest backport ##{pull_request_num} to #{maintenance_branch} #scgitx"]
         if socialcast_reviewer
-          review_message << "/cc @#{socialcast_reviewer} for #backport"
+          review_message << "/cc @#{socialcast_reviewer} for #backport track"
         end
         review_message << "/cc @SocialcastDevelopers"
         post review_message.join("\n\n"), :url => pull_request_url, :message_type => 'review_request'
