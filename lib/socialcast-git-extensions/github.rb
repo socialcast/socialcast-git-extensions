@@ -32,7 +32,7 @@ module Socialcast
 
       # returns the url of the created pull request
       # @see http://developer.github.com/v3/pulls/
-      def create_pull_request(token, branch, repo, body, assignee)
+      def create_pull_request(branch, repo, body, assignee)
         payload = {:title => branch, :base => base_branch, :head => branch, :body => body}.to_json
         say "Creating pull request for "
         say "#{branch} ", :green
@@ -40,41 +40,25 @@ module Socialcast
         say "#{base_branch} ", :green
         say "in "
         say repo, :green
-        response = RestClient::Request.new(:url => "https://api.github.com/repos/#{repo}/pulls", :method => "POST", :payload => payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
-        data = JSON.parse response.body
-
+        data = github_api_request("POST", "repos/#{repo}/pulls", payload)
         assign_pull_request(token, branch, assignee, data) if assignee ## Unfortunately this needs to be done in a seperate request.
 
         url = data['html_url']
         url
-      rescue RestClient::Exception => e
-        process_error e
-        throw e
       end
 
       # find the PRs matching the given commit hash
       # https://developer.github.com/v3/search/#search-issues
-      def pull_requests_for_commit(token, repo, commit_hash)
+      def pull_requests_for_commit(repo, commit_hash)
         query = "#{commit_hash}+type:pr+repo:#{repo}"
         say "Searching github pull requests for #{commit_hash}"
-        response = RestClient::Request.new(:url => "https://api.github.com/search/issues?q=#{query}", :method => "GET", :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
-        JSON.parse response.body
-      rescue RestClient::Exception => e
-        process_error e
-        throw e
+        github_api_request "GET", "search/issues?q=#{query}"
       end
 
-      def assign_pull_request(token, branch, assignee, data)
+      def assign_pull_request(branch, assignee, data)
         issue_payload = { :title => branch, :assignee => assignee }.to_json
-        RestClient::Request.new(:url => data['issue_url'], :method => "PATCH", :payload => issue_payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
-      rescue RestClient::Exception => e
-        data = JSON.parse e.http_body
-        say "Failed to assign pull request: #{data['message']}", :red
-      end
-
-      def process_error(e)
-        data = JSON.parse e.http_body
-        say "Failed to create pull request: #{data['message']}", :red
+        github_api_request "PATCH", data['issue_url'], issue_payload
+        say "Failed to assign pull request", :red
       end
 
       # @returns [String] socialcast username to assign the review to
@@ -94,6 +78,18 @@ module Socialcast
         end
       end
 
+      def github_api_request(method, path, payload = nil)
+        url = path.include?('http') ? path : "https://api.github.com/#{path}"
+        JSON.parse RestClient::Request.new(:url => url, :method => method, :payload => payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{authorization_token}", :user_agent => 'socialcast-git-extensions'}).execute
+      rescue RestClient::Exception => e
+        process_error e
+        throw e
+      end
+
+      def process_error(e)
+        data = JSON.parse e.http_body
+        say "GitHub request failed: #{data['message']}", :red
+      end
     end
   end
 end

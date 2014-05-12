@@ -33,8 +33,6 @@ module Socialcast
       method_option :skip_additional_reviewers, :type => :string, :aliases => '-s', :desc => 'Skips adding additional reviewers'
       # @see http://developer.github.com/v3/pulls/
       def reviewrequest(*additional_reviewers)
-        token = authorization_token
-
         update
 
         review_mention = if buddy = socialcast_review_buddy(current_user)
@@ -63,7 +61,7 @@ module Socialcast
         description = options[:description] || editor_input(PULL_REQUEST_DESCRIPTION)
         branch = current_branch
         repo = current_repo
-        url = create_pull_request token, branch, repo, description, assignee
+        url = create_pull_request branch, repo, description, assignee
         say "Pull request created: #{url}"
 
         short_description = description.split("\n").first(5).join("\n")
@@ -73,9 +71,8 @@ module Socialcast
 
       desc "findpr", "Find pull requests including a given commit"
       def findpr(commit_hash)
-        token = authorization_token
         repo = current_repo
-        data = pull_requests_for_commit(token, repo, commit_hash)
+        data = pull_requests_for_commit(repo, commit_hash)
 
         if data['items']
           data['items'].each do |entry|
@@ -86,16 +83,14 @@ module Socialcast
         end
       end
 
-      desc "backportpr", "Backport a pull request based on a previous branch"
+      desc "backportpr", "Backport a pull request"
       def backportpr(pull_request_num, maintenance_branch)
         ENV['BASE_BRANCH'] = maintenance_branch
-        token = authorization_token
         repo = current_repo
 
-        pull_request_data = JSON.parse RestClient::Request.new(:url => "https://api.github.com/repos/#{current_repo}/pulls/#{pull_request_num}", :method => "GET", :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
+        pull_request_data = github_api_request('GET', "repos/#{repo}/pulls/#{pull_request_num}")
 
-        commits_url = pull_request_data['commits_url']
-        commits_data = JSON.parse RestClient::Request.new(:url => commits_url, :method => "GET", :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{token}"}).execute
+        commits_data = github_api_request('GET', pull_request_data['commits_url'])
         non_merge_commits_data = commits_data.select { |commit_data| commit_data['parents'].length == 1 }
         shas = non_merge_commits_data.map { |commit| commit['sha'] }
 
@@ -107,9 +102,9 @@ module Socialcast
         grit_repo.git.native :cherry_pick, { :raise => true }, *shas
         grit_repo.git.native :push, { :raise => true }, 'origin', backport_branch
 
-        description = "Backport ##{pull_request_num} to https://github.com/#{repo}/tree/#{maintenance_branch}\n\n=======\n\n#{pull_request_data['body']}"
+        description = "Backport ##{pull_request_num} to https://github.com/#{repo}/tree/#{maintenance_branch}\n***\n#{pull_request_data['body']}"
         assignee = nil
-        create_pull_request(token, backport_branch, repo, description, assignee)
+        create_pull_request(backport_branch, repo, description, assignee)
       end
 
       # TODO: use --no-edit to skip merge messages
