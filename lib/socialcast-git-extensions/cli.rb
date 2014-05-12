@@ -87,6 +87,8 @@ module Socialcast
       def backportpr(pull_request_num, maintenance_branch)
         ENV['BASE_BRANCH'] = maintenance_branch
         repo = current_repo
+        assignee = github_track_reviewer('Backport')
+        socialcast_reviewer = socialcast_track_reviewer('Backport')
 
         pull_request_data = github_api_request('GET', "repos/#{repo}/pulls/#{pull_request_num}")
         commits_data = github_api_request('GET', pull_request_data['commits_url'])
@@ -97,9 +99,17 @@ module Socialcast
         backport_branch = "backport_#{pull_request_num}_to_#{maintenance_branch}"
         backport_to(backport_branch, shas)
 
-        description = "Backport ##{pull_request_num} to https://github.com/#{repo}/tree/#{maintenance_branch}\n***\n#{pull_request_data['body']}"
-        assignee = github_track_reviewer('Backport')
-        create_pull_request(backport_branch, repo, description, assignee)
+        maintenance_branch_url = "https://github.com/#{repo}/tree/#{maintenance_branch}"
+        description = "Backport ##{pull_request_num} to #{maintenance_branch_url}\n***\n#{pull_request_data['body']}"
+
+        pull_request_url = create_pull_request(backport_branch, repo, description, assignee)
+
+        review_message = ["#reviewrequest backport #{pull_request_data['html_url']} to #{maintenance_branch} #scgitx"]
+        if socialcast_reviewer
+          review_message << "/cc @#{socialcast_reviewer} for #backport"
+        end
+        review_message << "/cc @SocialcastDevelopers"
+        post review_message.join("\n\n"), :url => pull_request_url, :message_type => 'review_request'
       end
 
       # TODO: use --no-edit to skip merge messages

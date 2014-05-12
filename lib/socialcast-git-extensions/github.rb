@@ -78,19 +78,33 @@ module Socialcast
         end
       end
 
-      # @returns [String] github username who is responsible for the track
-      # @returns [nil] when no buddy system configured or user not found
+      # @returns [String] github username responsible for the track
+      # @returns [nil] when user not found
       def github_track_reviewer(track)
+        github_username_for_socialcast_username(socialcast_track_reviewer(track))
+      end
+
+      # @returns [String] Socialcast username responsible for the track
+      # @returns [nil] when user not found
+      def socialcast_track_reviewer(track)
         specialty_reviewers.values.each do |reviewer_hash|
           if reviewer_hash['label'].to_s.downcase == track.downcase
-            review_buddies.each_pair do |github_username, review_buddy_hash|
-              if review_buddy_hash['socialcast_username'] == reviewer_hash['socialcast_username']
-                return github_username
-              end
-            end
+            return reviewer_hash['socialcast_username']
           end
         end
         nil
+      end
+
+      # @returns [String] github username corresponding to the Socialcast username
+      # @returns [nil] when user not found
+      def github_username_for_socialcast_username(socialcast_username)
+        return if socialcast_username.nil? || socialcast_username == ""
+
+        review_buddies.each_pair do |github_username, review_buddy_hash|
+          if review_buddy_hash['socialcast_username'] == socialcast_username
+            return github_username
+          end
+        end
       end
 
       def github_api_request(method, path, payload = nil)
