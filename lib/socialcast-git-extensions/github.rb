@@ -78,6 +78,21 @@ module Socialcast
         end
       end
 
+      # @returns [String] github username who is responsible for the track
+      # @returns [nil] when no buddy system configured or user not found
+      def github_track_reviewer(track)
+        specialty_reviewers.values.each do |reviewer_hash|
+          if reviewer_hash['label'].to_s.downcase == track.downcase
+            review_buddies.each_pair do |github_username, review_buddy_hash|
+              if review_buddy_hash['socialcast_username'] == reviewer_hash['socialcast_username']
+                return github_username
+              end
+            end
+          end
+        end
+        nil
+      end
+
       def github_api_request(method, path, payload = nil)
         url = path.include?('http') ? path : "https://api.github.com/#{path}"
         JSON.parse RestClient::Request.new(:url => url, :method => method, :payload => payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{authorization_token}", :user_agent => 'socialcast-git-extensions'}).execute

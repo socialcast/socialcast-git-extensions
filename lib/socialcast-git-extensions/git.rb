@@ -28,6 +28,13 @@ module Socialcast
         `git config -z --global --get github.user`.strip
       end
 
+      def backport_to(branch, shas)
+        run_cmd "git checkout #{base_branch}"
+        run_cmd "git checkout -b #{branch}"
+        run_cmd "git cherry-pick #{shas.join(' ')}"
+        run_cmd "git push origin HEAD"
+      end
+
       # retrieve a list of branches
       def branches(options = {})
         branches = []

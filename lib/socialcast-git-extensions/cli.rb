@@ -89,21 +89,16 @@ module Socialcast
         repo = current_repo
 
         pull_request_data = github_api_request('GET', "repos/#{repo}/pulls/#{pull_request_num}")
-
         commits_data = github_api_request('GET', pull_request_data['commits_url'])
+
         non_merge_commits_data = commits_data.select { |commit_data| commit_data['parents'].length == 1 }
         shas = non_merge_commits_data.map { |commit| commit['sha'] }
 
-        grit_repo = Grit::Repo.new(Dir.pwd)
-        grit_repo.git.native :checkout, { :raise => true }, maintenance_branch
-
         backport_branch = "backport_#{pull_request_num}_to_#{maintenance_branch}"
-        grit_repo.git.native :checkout, { :b => true, :raise => true }, backport_branch
-        grit_repo.git.native :cherry_pick, { :raise => true }, *shas
-        grit_repo.git.native :push, { :raise => true }, 'origin', backport_branch
+        backport_to(backport_branch, shas)
 
         description = "Backport ##{pull_request_num} to https://github.com/#{repo}/tree/#{maintenance_branch}\n***\n#{pull_request_data['body']}"
-        assignee = nil
+        assignee = github_track_reviewer('Backport')
         create_pull_request(backport_branch, repo, description, assignee)
       end
 
