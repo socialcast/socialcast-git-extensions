@@ -86,4 +86,5 @@ reset an aggregate branch (ex: prototype, staging) back to a known good state.
 
 ## Copyright
 
-Copyright (c) 2010 Socialcast, Inc. See LICENSE for details.
+Copyright (c) 2014 Socialcast, Inc. See LICENSE for details.
+
