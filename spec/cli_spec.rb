@@ -430,7 +430,7 @@ describe Socialcast::Gitx::CLI do
     end
   end
 
-  describe '#backport_pr' do
+  describe '#backportpr' do
     before do
       # https://developer.github.com/v3/search/#search-issues
       pr_response = {
@@ -886,7 +886,7 @@ describe Socialcast::Gitx::CLI do
       }
 
       stub_request(:get, "https://api.github.com/search/issues?q=abc123%20type:pr%20repo:socialcast/socialcast-git-extensions").
-        with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>/token\s\w+/, 'Content-Type'=>'application/json', 'User-Agent'=>'Ruby'}).
+        with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>/token\s\w+/, 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'}).
         to_return(:status => 200, :body => stub_response.to_json, :headers => {})
       Socialcast::Gitx::CLI.any_instance.should_receive(:findpr).and_call_original
       Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
@@ -909,7 +909,7 @@ describe Socialcast::Gitx::CLI do
       context 'when description != nil' do
         before do
           stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-            to_return(:status => 200, :body => %q({"html_url" => "http://github.com/repo/project/pulls/1"}), :headers => {})
+            to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1"}), :headers => {})
 
           stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']

@@ -85,6 +85,7 @@ module Socialcast
 
       desc "backportpr", "Backport a pull request"
       def backportpr(pull_request_num, maintenance_branch)
+        original_base_branch = ENV['BASE_BRANCH']
         ENV['BASE_BRANCH'] = maintenance_branch
         repo = current_repo
         assignee = github_track_reviewer('Backport')
@@ -110,6 +111,8 @@ module Socialcast
         end
         review_message << "/cc @SocialcastDevelopers"
         post review_message.join("\n\n"), :url => pull_request_url, :message_type => 'review_request'
+      ensure
+        ENV['BASE_BRANCH'] = original_base_branch
       end
 
       # TODO: use --no-edit to skip merge messages
