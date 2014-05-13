@@ -33,8 +33,6 @@ module Socialcast
       method_option :skip_additional_reviewers, :type => :string, :aliases => '-s', :desc => 'Skips adding additional reviewers'
       # @see http://developer.github.com/v3/pulls/
       def reviewrequest(*additional_reviewers)
-        token = authorization_token
-
         update
 
         review_mention = if buddy = socialcast_review_buddy(current_user)
@@ -63,7 +61,7 @@ module Socialcast
         description = options[:description] || editor_input(PULL_REQUEST_DESCRIPTION)
         branch = current_branch
         repo = current_repo
-        url = create_pull_request token, branch, repo, description, assignee
+        url = create_pull_request branch, repo, description, assignee
         say "Pull request created: #{url}"
 
         short_description = description.split("\n").first(5).join("\n")
@@ -73,9 +71,8 @@ module Socialcast
 
       desc "findpr", "Find pull requests including a given commit"
       def findpr(commit_hash)
-        token = authorization_token
         repo = current_repo
-        data = pull_requests_for_commit(token, repo, commit_hash)
+        data = pull_requests_for_commit(repo, commit_hash)
 
         if data['items']
           data['items'].each do |entry|
@@ -84,7 +81,38 @@ module Socialcast
         else
           say "No results found", :yellow
         end
+      end
 
+      desc "backportpr", "Backport a pull request"
+      def backportpr(pull_request_num, maintenance_branch)
+        original_base_branch = ENV['BASE_BRANCH']
+        ENV['BASE_BRANCH'] = maintenance_branch
+        repo = current_repo
+        assignee = github_track_reviewer('Backport')
+        socialcast_reviewer = socialcast_track_reviewer('Backport')
+
+        pull_request_data = github_api_request('GET', "repos/#{repo}/pulls/#{pull_request_num}")
+        commits_data = github_api_request('GET', pull_request_data['commits_url'])
+
+        non_merge_commits_data = commits_data.select { |commit_data| commit_data['parents'].length == 1 }
+        shas = non_merge_commits_data.map { |commit| commit['sha'] }
+
+        backport_branch = "backport_#{pull_request_num}_to_#{maintenance_branch}"
+        backport_to(backport_branch, shas)
+
+        maintenance_branch_url = "https://github.com/#{repo}/tree/#{maintenance_branch}"
+        description = "Backport ##{pull_request_num} to #{maintenance_branch_url}\n***\n#{pull_request_data['body']}"
+
+        pull_request_url = create_pull_request(backport_branch, repo, description, assignee)
+
+        review_message = ["#reviewrequest backport ##{pull_request_num} to #{maintenance_branch} #scgitx"]
+        if socialcast_reviewer
+          review_message << "/cc @#{socialcast_reviewer} for #backport track"
+        end
+        review_message << "/cc @SocialcastDevelopers"
+        post review_message.join("\n\n"), :url => pull_request_url, :message_type => 'review_request'
+      ensure
+        ENV['BASE_BRANCH'] = original_base_branch
       end
 
       # TODO: use --no-edit to skip merge messages

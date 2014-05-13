@@ -28,6 +28,27 @@ module Socialcast
         `git config -z --global --get github.user`.strip
       end
 
+      def backport_to(branch, shas)
+        run_cmd "git checkout #{base_branch}"
+        run_cmd "git checkout -b #{branch}"
+        begin
+          run_cmd "git cherry-pick #{shas.join(' ')}"
+        rescue => e
+          while true
+            proceed = $terminal.ask "Error during cherry-pick.  You can proceed by resolving the conflicts and using 'git cherry-pick --continue' to finish the cherry-pick in another terminal. Would you like to proceed (y/n)?"
+            if proceed.to_s.downcase == 'n'
+              run_cmd "git cherry-pick --abort"
+              exit 1
+            elsif proceed.to_s.downcase == 'y'
+              break
+            else
+              say "Invalid response"
+            end
+          end
+        end
+        run_cmd "git push origin HEAD"
+      end
+
       # retrieve a list of branches
       def branches(options = {})
         branches = []
