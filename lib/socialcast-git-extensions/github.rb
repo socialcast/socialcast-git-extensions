@@ -106,7 +106,7 @@ module Socialcast
 
       def github_api_request(method, path, payload = nil)
         url = path.include?('http') ? path : "https://api.github.com/#{path}"
-        JSON.parse RestClient::Request.new(:url => url, :method => method, :payload => payload, :headers => {:accept => :json, :content_type => :json, 'Authorization' => "token #{authorization_token}", :user_agent => 'socialcast-git-extensions'}).execute
+        JSON.parse RestClient::Request.new(:url => url, :method => method, :payload => payload, :headers => { :accept => :json, :content_type => :json, 'Authorization' => "token #{authorization_token}", :user_agent => 'socialcast-git-extensions' }).execute
       rescue RestClient::Exception => e
         process_error e
         throw e
