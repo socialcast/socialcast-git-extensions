@@ -14,10 +14,10 @@ describe Socialcast::Gitx::CLI do
   end
 
   def stub_message(message_body, params = {})
-    json_body = { :message => { :body => message_body }.merge!(params) }
+    json_body = { :message => params.merge!(:body => message_body) }
 
     stub_request(:post, "https://testuser:testpassword@testdomain/api/messages.json")
-      .with(:body => json_body)
+      .with(:body => json_body.to_json)
       .to_return(:status => 200, :body => '', :headers => {})
   end
 
@@ -430,6 +430,407 @@ describe Socialcast::Gitx::CLI do
     end
   end
 
+  describe '#backport_pr' do
+    before do
+      # https://developer.github.com/v3/search/#search-issues
+      pr_response = {
+        "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59",
+        "id" => 13712197,
+        "html_url" => "https://github.com/socialcast/socialcast-git-extensions/pull/59",
+        "diff_url" => "https://github.com/socialcast/socialcast-git-extensions/pull/59.diff",
+        "patch_url" => "https://github.com/socialcast/socialcast-git-extensions/pull/59.patch",
+        "issue_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/59",
+        "number" => 59,
+        "state" => "closed",
+        "title" => "additional-notifications",
+        "user" => {
+          "login" => "MikeSilvis",
+          "id" => 152323,
+          "avatar_url" => "https://avatars.githubusercontent.com/u/152323?",
+          "gravatar_id" => "1bb5f2e12dcbfb8c103689f4ae94f431",
+          "url" => "https://api.github.com/users/MikeSilvis",
+          "html_url" => "https://github.com/MikeSilvis",
+          "followers_url" => "https://api.github.com/users/MikeSilvis/followers",
+          "following_url" => "https://api.github.com/users/MikeSilvis/following{/other_user}",
+          "gists_url" => "https://api.github.com/users/MikeSilvis/gists{/gist_id}",
+          "starred_url" => "https://api.github.com/users/MikeSilvis/starred{/owner}{/repo}",
+          "subscriptions_url" => "https://api.github.com/users/MikeSilvis/subscriptions",
+          "organizations_url" => "https://api.github.com/users/MikeSilvis/orgs",
+          "repos_url" => "https://api.github.com/users/MikeSilvis/repos",
+          "events_url" => "https://api.github.com/users/MikeSilvis/events{/privacy}",
+          "received_events_url" => "https://api.github.com/users/MikeSilvis/received_events",
+          "type" => "User",
+          "site_admin" => false
+        },
+        "body" => "simply testing this out",
+        "created_at" => "2014-03-18T22:39:37Z",
+        "updated_at" => "2014-03-18T22:40:18Z",
+        "closed_at" => "2014-03-18T22:39:46Z",
+        "merged_at" => nil,
+        "merge_commit_sha" => "f73009f4eb245c84da90e8abf9be846c58bc1e3b",
+        "assignee" => nil,
+        "milestone" => nil,
+        "commits_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/commits",
+        "review_comments_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/comments",
+        "review_comment_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/comments/{number}",
+        "comments_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/59/comments",
+        "statuses_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/statuses/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+        "head" => {
+          "label" => "socialcast:additional-notifications",
+          "ref" => "additional-notifications",
+          "sha" => "5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+          "user" => {
+            "login" => "socialcast",
+            "id" => 57931,
+            "avatar_url" => "https://avatars.githubusercontent.com/u/57931?",
+            "gravatar_id" => "489ec347da22410e9770ea022e6e2038",
+            "url" => "https://api.github.com/users/socialcast",
+            "html_url" => "https://github.com/socialcast",
+            "followers_url" => "https://api.github.com/users/socialcast/followers",
+            "following_url" => "https://api.github.com/users/socialcast/following{/other_user}",
+            "gists_url" => "https://api.github.com/users/socialcast/gists{/gist_id}",
+            "starred_url" => "https://api.github.com/users/socialcast/starred{/owner}{/repo}",
+            "subscriptions_url" => "https://api.github.com/users/socialcast/subscriptions",
+            "organizations_url" => "https://api.github.com/users/socialcast/orgs",
+            "repos_url" => "https://api.github.com/users/socialcast/repos",
+            "events_url" => "https://api.github.com/users/socialcast/events{/privacy}",
+            "received_events_url" => "https://api.github.com/users/socialcast/received_events",
+            "type" => "Organization",
+            "site_admin" => false
+          },
+          "repo" => {
+            "id" => 1000634,
+            "name" => "socialcast-git-extensions",
+            "full_name" => "socialcast/socialcast-git-extensions",
+            "owner" => {
+              "login" => "socialcast",
+              "id" => 57931,
+              "avatar_url" => "https://avatars.githubusercontent.com/u/57931?",
+              "gravatar_id" => "489ec347da22410e9770ea022e6e2038",
+              "url" => "https://api.github.com/users/socialcast",
+              "html_url" => "https://github.com/socialcast",
+              "followers_url" => "https://api.github.com/users/socialcast/followers",
+              "following_url" => "https://api.github.com/users/socialcast/following{/other_user}",
+              "gists_url" => "https://api.github.com/users/socialcast/gists{/gist_id}",
+              "starred_url" => "https://api.github.com/users/socialcast/starred{/owner}{/repo}",
+              "subscriptions_url" => "https://api.github.com/users/socialcast/subscriptions",
+              "organizations_url" => "https://api.github.com/users/socialcast/orgs",
+              "repos_url" => "https://api.github.com/users/socialcast/repos",
+              "events_url" => "https://api.github.com/users/socialcast/events{/privacy}",
+              "received_events_url" => "https://api.github.com/users/socialcast/received_events",
+              "type" => "Organization",
+              "site_admin" => false
+            },
+            "private" => false,
+            "html_url" => "https://github.com/socialcast/socialcast-git-extensions",
+            "description" => "",
+            "fork" => false,
+            "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions",
+            "forks_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/forks",
+            "keys_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/keys{/key_id}",
+            "collaborators_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/collaborators{/collaborator}",
+            "teams_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/teams",
+            "hooks_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/hooks",
+            "issue_events_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/events{/number}",
+            "events_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/events",
+            "assignees_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/assignees{/user}",
+            "branches_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/branches{/branch}",
+            "tags_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/tags",
+            "blobs_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/blobs{/sha}",
+            "git_tags_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/tags{/sha}",
+            "git_refs_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/refs{/sha}",
+            "trees_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/trees{/sha}",
+            "statuses_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/statuses/{sha}",
+            "languages_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/languages",
+            "stargazers_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/stargazers",
+            "contributors_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/contributors",
+            "subscribers_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/subscribers",
+            "subscription_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/subscription",
+            "commits_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits{/sha}",
+            "git_commits_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/commits{/sha}",
+            "comments_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/comments{/number}",
+            "issue_comment_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/comments/{number}",
+            "contents_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/contents/{+path}",
+            "compare_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/compare/{base}...{head}",
+            "merges_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/merges",
+            "archive_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/{archive_format}{/ref}",
+            "downloads_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/downloads",
+            "issues_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues{/number}",
+            "pulls_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls{/number}",
+            "milestones_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/milestones{/number}",
+            "notifications_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/notifications{?since,all,participating}",
+            "labels_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/labels{/name}",
+            "releases_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/releases{/id}",
+            "created_at" => "2010-10-18T21:23:25Z",
+            "updated_at" => "2014-05-12T20:03:30Z",
+            "pushed_at" => "2014-05-12T20:03:31Z",
+            "git_url" => "git://github.com/socialcast/socialcast-git-extensions.git",
+            "ssh_url" => "git@github.com:socialcast/socialcast-git-extensions.git",
+            "clone_url" => "https://github.com/socialcast/socialcast-git-extensions.git",
+            "svn_url" => "https://github.com/socialcast/socialcast-git-extensions",
+            "homepage" => "",
+            "size" => 1719,
+            "stargazers_count" => 3,
+            "watchers_count" => 3,
+            "language" => "Ruby",
+            "has_issues" => true,
+            "has_downloads" => true,
+            "has_wiki" => true,
+            "forks_count" => 6,
+            "mirror_url" => nil,
+            "open_issues_count" => 13,
+            "forks" => 6,
+            "open_issues" => 13,
+            "watchers" => 3,
+            "default_branch" => "master"
+          }
+        },
+        "base" => {
+          "label" => "socialcast:master",
+          "ref" => "master",
+          "sha" => "1baae2de301c43d44297647f3f9c1e06697748ad",
+          "user" => {
+            "login" => "socialcast",
+            "id" => 57931,
+            "avatar_url" => "https://avatars.githubusercontent.com/u/57931?",
+            "gravatar_id" => "489ec347da22410e9770ea022e6e2038",
+            "url" => "https://api.github.com/users/socialcast",
+            "html_url" => "https://github.com/socialcast",
+            "followers_url" => "https://api.github.com/users/socialcast/followers",
+            "following_url" => "https://api.github.com/users/socialcast/following{/other_user}",
+            "gists_url" => "https://api.github.com/users/socialcast/gists{/gist_id}",
+            "starred_url" => "https://api.github.com/users/socialcast/starred{/owner}{/repo}",
+            "subscriptions_url" => "https://api.github.com/users/socialcast/subscriptions",
+            "organizations_url" => "https://api.github.com/users/socialcast/orgs",
+            "repos_url" => "https://api.github.com/users/socialcast/repos",
+            "events_url" => "https://api.github.com/users/socialcast/events{/privacy}",
+            "received_events_url" => "https://api.github.com/users/socialcast/received_events",
+            "type" => "Organization",
+            "site_admin" => false
+          },
+          "repo" => {
+            "id" => 1000634,
+            "name" => "socialcast-git-extensions",
+            "full_name" => "socialcast/socialcast-git-extensions",
+            "owner" => {
+              "login" => "socialcast",
+              "id" => 57931,
+              "avatar_url" => "https://avatars.githubusercontent.com/u/57931?",
+              "gravatar_id" => "489ec347da22410e9770ea022e6e2038",
+              "url" => "https://api.github.com/users/socialcast",
+              "html_url" => "https://github.com/socialcast",
+              "followers_url" => "https://api.github.com/users/socialcast/followers",
+              "following_url" => "https://api.github.com/users/socialcast/following{/other_user}",
+              "gists_url" => "https://api.github.com/users/socialcast/gists{/gist_id}",
+              "starred_url" => "https://api.github.com/users/socialcast/starred{/owner}{/repo}",
+              "subscriptions_url" => "https://api.github.com/users/socialcast/subscriptions",
+              "organizations_url" => "https://api.github.com/users/socialcast/orgs",
+              "repos_url" => "https://api.github.com/users/socialcast/repos",
+              "events_url" => "https://api.github.com/users/socialcast/events{/privacy}",
+              "received_events_url" => "https://api.github.com/users/socialcast/received_events",
+              "type" => "Organization",
+              "site_admin" => false
+            },
+            "private" => false,
+            "html_url" => "https://github.com/socialcast/socialcast-git-extensions",
+            "description" => "",
+            "fork" => false,
+            "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions",
+            "forks_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/forks",
+            "keys_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/keys{/key_id}",
+            "collaborators_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/collaborators{/collaborator}",
+            "teams_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/teams",
+            "hooks_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/hooks",
+            "issue_events_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/events{/number}",
+            "events_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/events",
+            "assignees_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/assignees{/user}",
+            "branches_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/branches{/branch}",
+            "tags_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/tags",
+            "blobs_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/blobs{/sha}",
+            "git_tags_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/tags{/sha}",
+            "git_refs_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/refs{/sha}",
+            "trees_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/trees{/sha}",
+            "statuses_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/statuses/{sha}",
+            "languages_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/languages",
+            "stargazers_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/stargazers",
+            "contributors_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/contributors",
+            "subscribers_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/subscribers",
+            "subscription_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/subscription",
+            "commits_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits{/sha}",
+            "git_commits_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/commits{/sha}",
+            "comments_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/comments{/number}",
+            "issue_comment_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/comments/{number}",
+            "contents_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/contents/{+path}",
+            "compare_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/compare/{base}...{head}",
+            "merges_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/merges",
+            "archive_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/{archive_format}{/ref}",
+            "downloads_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/downloads",
+            "issues_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues{/number}",
+            "pulls_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls{/number}",
+            "milestones_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/milestones{/number}",
+            "notifications_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/notifications{?since,all,participating}",
+            "labels_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/labels{/name}",
+            "releases_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/releases{/id}",
+            "created_at" => "2010-10-18T21:23:25Z",
+            "updated_at" => "2014-05-12T20:03:30Z",
+            "pushed_at" => "2014-05-12T20:03:31Z",
+            "git_url" => "git://github.com/socialcast/socialcast-git-extensions.git",
+            "ssh_url" => "git@github.com:socialcast/socialcast-git-extensions.git",
+            "clone_url" => "https://github.com/socialcast/socialcast-git-extensions.git",
+            "svn_url" => "https://github.com/socialcast/socialcast-git-extensions",
+            "homepage" => "",
+            "size" => 1719,
+            "stargazers_count" => 3,
+            "watchers_count" => 3,
+            "language" => "Ruby",
+            "has_issues" => true,
+            "has_downloads" => true,
+            "has_wiki" => true,
+            "forks_count" => 6,
+            "mirror_url" => nil,
+            "open_issues_count" => 13,
+            "forks" => 6,
+            "open_issues" => 13,
+            "watchers" => 3,
+            "default_branch" => "master"
+          }
+        },
+        "_links" => {
+          "self" => {
+            "href" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59"
+          },
+          "html" => {
+            "href" => "https://github.com/socialcast/socialcast-git-extensions/pull/59"
+          },
+          "issue" => {
+            "href" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/59"
+          },
+          "comments" => {
+            "href" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/59/comments"
+          },
+          "review_comments" => {
+            "href" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/comments"
+          },
+          "review_comment" => {
+            "href" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/comments/{number}"
+          },
+          "commits" => {
+            "href" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/commits"
+          },
+          "statuses" => {
+            "href" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/statuses/5e30d5af3f4d1bb3a34cc97568299be028b65f6f"
+          }
+        },
+        "merged" => false,
+        "mergeable" => true,
+        "mergeable_state" => "unstable",
+        "merged_by" => nil,
+        "comments" => 0,
+        "review_comments" => 0,
+        "commits" => 1,
+        "additions" => 14,
+        "deletions" => 2,
+        "changed_files" => 2
+      }
+
+      commits_response = [
+        {
+          "sha" => "5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+          "commit" => {
+            "author" => {
+              "name" => "Mike Silvis",
+              "email" => "mikesilvis@gmail.com",
+              "date" => "2014-03-18T22:39:12Z"
+            },
+            "committer" => {
+              "name" => "Mike Silvis",
+              "email" => "mikesilvis@gmail.com",
+              "date" => "2014-03-18T22:39:12Z"
+            },
+            "message" => "adding the ability to specify additional reviewers",
+            "tree" => {
+              "sha" => "dcf05deb22223997a5184cd3a1866249f3e73e3b",
+              "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/trees/dcf05deb22223997a5184cd3a1866249f3e73e3b"
+            },
+            "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+            "comment_count" => 0
+          },
+          "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+          "html_url" => "https://github.com/socialcast/socialcast-git-extensions/commit/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+          "comments_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f/comments",
+          "author" => {
+            "login" => "MikeSilvis",
+            "id" => 152323,
+            "avatar_url" => "https://avatars.githubusercontent.com/u/152323?",
+            "gravatar_id" => "1bb5f2e12dcbfb8c103689f4ae94f431",
+            "url" => "https://api.github.com/users/MikeSilvis",
+            "html_url" => "https://github.com/MikeSilvis",
+            "followers_url" => "https://api.github.com/users/MikeSilvis/followers",
+            "following_url" => "https://api.github.com/users/MikeSilvis/following{/other_user}",
+            "gists_url" => "https://api.github.com/users/MikeSilvis/gists{/gist_id}",
+            "starred_url" => "https://api.github.com/users/MikeSilvis/starred{/owner}{/repo}",
+            "subscriptions_url" => "https://api.github.com/users/MikeSilvis/subscriptions",
+            "organizations_url" => "https://api.github.com/users/MikeSilvis/orgs",
+            "repos_url" => "https://api.github.com/users/MikeSilvis/repos",
+            "events_url" => "https://api.github.com/users/MikeSilvis/events{/privacy}",
+            "received_events_url" => "https://api.github.com/users/MikeSilvis/received_events",
+            "type" => "User",
+            "site_admin" => false
+          },
+          "committer" => {
+            "login" => "MikeSilvis",
+            "id" => 152323,
+            "avatar_url" => "https://avatars.githubusercontent.com/u/152323?",
+            "gravatar_id" => "1bb5f2e12dcbfb8c103689f4ae94f431",
+            "url" => "https://api.github.com/users/MikeSilvis",
+            "html_url" => "https://github.com/MikeSilvis",
+            "followers_url" => "https://api.github.com/users/MikeSilvis/followers",
+            "following_url" => "https://api.github.com/users/MikeSilvis/following{/other_user}",
+            "gists_url" => "https://api.github.com/users/MikeSilvis/gists{/gist_id}",
+            "starred_url" => "https://api.github.com/users/MikeSilvis/starred{/owner}{/repo}",
+            "subscriptions_url" => "https://api.github.com/users/MikeSilvis/subscriptions",
+            "organizations_url" => "https://api.github.com/users/MikeSilvis/orgs",
+            "repos_url" => "https://api.github.com/users/MikeSilvis/repos",
+            "events_url" => "https://api.github.com/users/MikeSilvis/events{/privacy}",
+            "received_events_url" => "https://api.github.com/users/MikeSilvis/received_events",
+            "type" => "User",
+            "site_admin" => false
+          },
+          "parents" => [
+            {
+              "sha" => "1baae2de301c43d44297647f3f9c1e06697748ad",
+              "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/1baae2de301c43d44297647f3f9c1e06697748ad",
+              "html_url" => "https://github.com/socialcast/socialcast-git-extensions/commit/1baae2de301c43d44297647f3f9c1e06697748ad"
+            }
+          ]
+        }
+      ]
+
+      stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59").
+        with(:headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent' => 'socialcast-git-extensions' }).
+        to_return(:status => 200, :body => pr_response.to_json, :headers => {})
+      stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/commits").
+        with(:headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent' => 'socialcast-git-extensions' }).
+        to_return(:status => 200, :body => commits_response.to_json, :headers => {})
+      stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
+         with(:body => "{\"title\":\"backport_59_to_v1.x\",\"base\":\"v1.x\",\"head\":\"backport_59_to_v1.x\",\"body\":\"Backport #59 to https://github.com/socialcast/socialcast-git-extensions/tree/v1.x\\n***\\nsimply testing this out\"}",
+              :headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent'=>'socialcast-git-extensions' }).
+         to_return(:status => 200, :body => '{"html_url": "https://github.com/socialcast/socialcast-git-extensions/pulls/60"}', :headers => { 'Content-Type' => 'application/json' })
+
+      stub_message "#reviewrequest backport #59 to v1.x #scgitx\n\n/cc @SocialcastDevelopers", :url => 'https://github.com/socialcast/socialcast-git-extensions/pulls/60', :message_type => 'review_request'
+
+      Socialcast::Gitx::CLI.any_instance.should_receive(:backportpr).and_call_original
+      Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
+        @said_text = @said_text.to_s + message
+      end
+      Socialcast::Gitx::CLI.start ['backportpr', '59', 'v1.x']
+    end
+    it 'creates a branch based on v1.x and cherry-picks in PR 59' do
+      @said_text.should include "Creating pull request for backport_59_to_v1.x against v1.x in socialcast/socialcast-git-extensions"
+      @said_text.should include "Message has been posted: http://demo.socialcast.com/messages/123"
+    end
+  end
+
   describe '#findpr' do
     before do
       # https://developer.github.com/v3/search/#search-issues
@@ -505,10 +906,10 @@ describe Socialcast::Gitx::CLI do
       before do
         Socialcast::Gitx::CLI.any_instance.stub(:config_file).and_return(Pathname(''))
       end
-      context 'when description != null' do
+      context 'when description != nil' do
         before do
           stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-            to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1"}), :headers => {})
+            to_return(:status => 200, :body => %q({"html_url" => "http://github.com/repo/project/pulls/1"}), :headers => {})
 
           stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
@@ -528,7 +929,7 @@ describe Socialcast::Gitx::CLI do
     context 'when review_buddies are specified via a /config YML file' do
       before do
         stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-          to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://github.com/repos/repo/project/issues/1"}), :headers => {})
+          to_return(:status => 200, :body => %q({"html_url" => "http://github.com/repo/project/pulls/1", "issue_url" => "http://github.com/repos/repo/project/issues/1"}), :headers => {})
         stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
       end
       context 'and additional reviewers are specified' do
