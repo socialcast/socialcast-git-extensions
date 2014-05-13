@@ -911,7 +911,8 @@ describe Socialcast::Gitx::CLI do
           stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
             to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1"}), :headers => {})
 
-          stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
+          stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n1 file changed", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
+          Socialcast::Gitx::CLI.any_instance.stub(:changelog_summary).and_return('1 file changed')
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
         end
         it 'should create github pull request' do end # see expectations
@@ -929,12 +930,13 @@ describe Socialcast::Gitx::CLI do
     context 'when review_buddies are specified via a /config YML file' do
       before do
         stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-          to_return(:status => 200, :body => %q({"html_url" => "http://github.com/repo/project/pulls/1", "issue_url" => "http://github.com/repos/repo/project/issues/1"}), :headers => {})
+          to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://github.com/repos/repo/project/issues/1"}), :headers => {})
         stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
       end
       context 'and additional reviewers are specified' do
-        let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\n\nAssigned additionally to @JohnSmith for API review\n\ntesting\n\n" }
+        let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\n\nAssigned additionally to @JohnSmith for API review\n\ntesting\n\n1 file changed" }
         before do
+          Socialcast::Gitx::CLI.any_instance.stub(:changelog_summary).and_return('1 file changed')
           # The Review Buddy should be @mentioned in the message
           stub_message message_body, :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-a', 'a']
@@ -950,8 +952,9 @@ describe Socialcast::Gitx::CLI do
         end
       end
       context 'and additional reviewers are not specified' do
-        let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n" }
+        let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n1 file changed" }
         before do
+          Socialcast::Gitx::CLI.any_instance.stub(:changelog_summary).and_return('1 file changed')
           # The Review Buddy should be @mentioned in the message
           stub_message message_body, :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
