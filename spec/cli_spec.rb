@@ -886,7 +886,7 @@ describe Socialcast::Gitx::CLI do
       }
 
       stub_request(:get, "https://api.github.com/search/issues?q=abc123%20type:pr%20repo:socialcast/socialcast-git-extensions").
-        with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>/token\s\w+/, 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'}).
+        with(:headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent' => 'socialcast-git-extensions'}).
         to_return(:status => 200, :body => stub_response.to_json, :headers => {})
       Socialcast::Gitx::CLI.any_instance.should_receive(:findpr).and_call_original
       Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
