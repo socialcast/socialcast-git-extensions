@@ -9,6 +9,13 @@ module Socialcast
         raise "Cannot #{action} reserved branch" if reserved_branch?(branch)
       end
 
+      def assert_in_staging(branch)
+        branches_in_staging = branches(:remote => true, :merged => staging_branch)
+        unless branches_in_staging.include? branch
+          raise "Cannot release #{branch} unless it has already been promoted separately to #{staging_branch}"
+        end
+      end
+
       # lookup the current branch of the PWD
       def current_branch
         repo = Grit::Repo.new(Dir.pwd)
@@ -33,7 +40,7 @@ module Socialcast
         run_cmd "git checkout -b #{branch}"
         begin
           run_cmd "git cherry-pick #{shas.join(' ')}"
-        rescue => e
+        rescue
           while true
             proceed = $terminal.ask "Error during cherry-pick.  You can proceed by resolving the conflicts and using 'git cherry-pick --continue' to finish the cherry-pick in another terminal. Would you like to proceed (y/n)?"
             if proceed.to_s.downcase == 'n'
