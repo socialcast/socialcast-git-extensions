@@ -820,15 +820,10 @@ describe Socialcast::Gitx::CLI do
       stub_message "#reviewrequest backport #59 to v1.x #scgitx\n\n/cc @SocialcastDevelopers", :url => 'https://github.com/socialcast/socialcast-git-extensions/pulls/60', :message_type => 'review_request'
 
       Socialcast::Gitx::CLI.any_instance.should_receive(:backportpr).and_call_original
-      Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
-        @said_text = @said_text.to_s + message
-      end
+      Socialcast::Gitx::CLI.any_instance.should_receive(:post).with("#reviewrequest backport #59 to v1.x #scgitx\n\n/cc @SocialcastDevelopers", { :url => "https://github.com/socialcast/socialcast-git-extensions/pulls/60", :message_type => "review_request" })
       Socialcast::Gitx::CLI.start ['backportpr', '59', 'v1.x']
     end
-    it 'creates a branch based on v1.x and cherry-picks in PR 59' do
-      @said_text.should include "Creating pull request for backport_59_to_v1.x against v1.x in socialcast/socialcast-git-extensions"
-      @said_text.should include "Message has been posted: http://demo.socialcast.com/messages/123"
-    end
+    it 'creates a branch based on v1.x and cherry-picks in PR 59' do end
   end
 
   describe '#findpr' do
@@ -889,16 +884,11 @@ describe Socialcast::Gitx::CLI do
         with(:headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent' => 'socialcast-git-extensions'}).
         to_return(:status => 200, :body => stub_response.to_json, :headers => {})
       Socialcast::Gitx::CLI.any_instance.should_receive(:findpr).and_call_original
-      Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
-        @said_text = @said_text.to_s + message
-      end
+      Socialcast::Gitx::CLI.any_instance.stub(:say).with("Searching github pull requests for abc123")
+      Socialcast::Gitx::CLI.any_instance.stub(:say).with("\nhttps://github.com/batterseapower/pinyin-toolkit/issues/132\n\tLine Number Indexes Beyond 20 Not Displayed\n\tNick3C 2009-07-12T20:10:41Z")
       Socialcast::Gitx::CLI.start ['findpr', 'abc123']
     end
-    it 'fetches the data from github and prints it out' do
-      @said_text.should include "https://github.com/batterseapower/pinyin-toolkit/issues/132"
-      @said_text.should include "Nick3C"
-      @said_text.should include "Line Number Indexes Beyond 20 Not Displayed"
-    end
+    it 'fetches the data from github and prints it out' do end
   end
 
   describe '#reviewrequest' do

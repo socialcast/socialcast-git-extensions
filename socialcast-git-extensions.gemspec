@@ -14,15 +14,14 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "socialcast-git-extensions"
 
-  s.add_dependency(%q<json_pure>, [">= 0"])
-  s.add_runtime_dependency(%q<grit>, [">= 0"])
-  s.add_runtime_dependency(%q<socialcast>, [">= 1.3.0"])
-  s.add_runtime_dependency(%q<rest-client>, [">= 1.4.0"])
-  s.add_runtime_dependency(%q<thor>, [">= 0"])
-  s.add_development_dependency(%q<rake>, ["0.9.2.2"])
-  s.add_development_dependency "rspec", '>= 2.11.0'
-  s.add_development_dependency "pry", '>= 0'
-  s.add_development_dependency "webmock", '>= 0'
+  s.add_runtime_dependency 'grit', '~> 2.5.0'
+  s.add_runtime_dependency 'socialcast', '~> 1.3.0'
+  s.add_runtime_dependency 'rest-client', '~> 1.6.7'
+  s.add_runtime_dependency 'thor', '~> 0.19.1'
+  s.add_runtime_dependency 'rake', '~> 10.3.2'
+  s.add_development_dependency 'rspec', '~> 2.14.1'
+  s.add_development_dependency 'pry', '~>  0.9.12.6'
+  s.add_development_dependency 'webmock', '~> 1.18.0'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
