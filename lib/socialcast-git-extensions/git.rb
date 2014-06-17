@@ -12,7 +12,7 @@ module Socialcast
       def assert_in_staging(branch)
         branches_in_staging = branches(:remote => true, :merged => last_known_good_staging_branch)
         unless branches_in_staging.include? branch
-          raise "Cannot release #{branch} unless it has already been promoted separately to #{staging_branch}"
+          raise "Cannot release #{branch} unless it has already been promoted separately to #{staging_branch} and the build has passed."
         end
       end
 

@@ -154,9 +154,9 @@ describe Socialcast::Gitx::CLI do
   end
 
   describe '#release' do
-    let(:branches_in_staging) { ['FOO'] }
+    let(:branches_in_last_known_good_staging) { ['FOO'] }
     before do
-      Socialcast::Gitx::CLI.any_instance.should_receive(:branches).with(:remote => true, :merged => 'staging').and_return(branches_in_staging)
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).with(:remote => true, :merged => 'last_known_good_staging').and_return(branches_in_last_known_good_staging)
     end
 
     context 'when user rejects release' do
@@ -196,13 +196,13 @@ describe Socialcast::Gitx::CLI do
       end
     end
 
-    context 'when the branch is not in staging' do
-      let(:branches_in_staging) { ['another-branch'] }
+    context 'when the branch is not in last_known_good_staging' do
+      let(:branches_in_last_known_good_staging) { ['another-branch'] }
       before do
-        Socialcast::Gitx::CLI.any_instance.should_not_receive(:yes?)
+        expect_any_instance_of(Socialcast::Gitx::CLI).not_to receive(:yes?)
       end
       it 'prevents the release of the branch' do
-        expect { Socialcast::Gitx::CLI.start ['release'] }.to raise_error(RuntimeError, 'Cannot release FOO unless it has already been promoted separately to staging')
+        expect { Socialcast::Gitx::CLI.start ['release'] }.to raise_error(RuntimeError, 'Cannot release FOO unless it has already been promoted separately to staging and the build has passed.')
       end
     end
 
