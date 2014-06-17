@@ -27,23 +27,23 @@ describe Socialcast::Gitx::CLI do
     end
 
     Socialcast::Gitx::CLI.stubbed_executed_commands = []
-    Socialcast::Gitx::CLI.any_instance.stub(:current_branch).and_return('FOO')
-    Socialcast::Gitx::CLI.any_instance.stub(:current_user).and_return('wireframe')
-    Socialcast::CommandLine.stub(:credentials).and_return(:domain => 'testdomain', :user => 'testuser', :password => 'testpassword', :scgitx_token => 'faketoken')
+    allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:current_branch).and_return('FOO')
+    allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:current_user).and_return('wireframe')
+    allow(Socialcast::CommandLine).to receive(:credentials).and_return(:domain => 'testdomain', :user => 'testuser', :password => 'testpassword', :scgitx_token => 'faketoken')
   end
 
   describe '#update' do
     before do
-      Socialcast::Gitx::CLI.any_instance.should_not_receive(:post)
+      expect_any_instance_of(Socialcast::Gitx::CLI).not_to receive(:post)
       Socialcast::Gitx::CLI.start ['update']
     end
     it 'should not post message to socialcast' do end # see expectations
     it 'should run expected commands' do
-      Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+      expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
         'git pull origin FOO',
         'git pull origin master',
         'git push origin HEAD'
-      ]
+      ])
     end
   end
 
@@ -56,7 +56,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should default to prototype' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
@@ -67,12 +67,12 @@ describe Socialcast::Gitx::CLI do
           "git push origin HEAD",
           "git checkout FOO",
           "git checkout FOO"
-        ]
+        ])
       end
     end
     context 'when target branch is ommitted with custom prototype branch' do
       before do
-        Socialcast::Gitx::CLI.any_instance.stub(:prototype_branch).and_return('special-prototype')
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:prototype_branch).and_return('special-prototype')
 
         stub_message "#worklog integrating FOO into special-prototype #scgitx"
 
@@ -80,7 +80,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should default to prototype' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
@@ -91,7 +91,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin HEAD",
           "git checkout FOO",
           "git checkout FOO"
-        ]
+        ])
       end
     end
     context 'when target branch == prototype' do
@@ -102,7 +102,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
@@ -113,7 +113,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin HEAD",
           "git checkout FOO",
           "git checkout FOO"
-        ]
+        ])
       end
     end
     context 'when target branch == staging' do
@@ -124,7 +124,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should also integrate into prototype and run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
@@ -141,14 +141,14 @@ describe Socialcast::Gitx::CLI do
           "git push origin HEAD",
           "git checkout staging",
           "git checkout FOO"
-        ]
+        ])
       end
     end
     context 'when target branch != staging || prototype' do
       it 'should raise an error' do
-        lambda {
+        expect {
           Socialcast::Gitx::CLI.start ['integrate', 'asdfasdfasdf']
-        }.should raise_error(/Only aggregate branches are allowed for integration/)
+        }.to raise_error(/Only aggregate branches are allowed for integration/)
       end
     end
   end
@@ -156,24 +156,24 @@ describe Socialcast::Gitx::CLI do
   describe '#release' do
     context 'when user rejects release' do
       before do
-        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(false)
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(false)
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'should run no commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == []
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([])
       end
     end
     context 'when user confirms release' do
       before do
         stub_message "#worklog releasing FOO to master #scgitx"
 
-        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
-        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
@@ -187,20 +187,20 @@ describe Socialcast::Gitx::CLI do
           "git pull . master",
           "git push origin HEAD",
           "git checkout master"
-        ]
+        ])
       end
     end
 
     context 'with reserved_branches via config file' do
       before do
         stub_message "#worklog releasing FOO to master #scgitx"
-        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
-        Socialcast::Gitx::CLI.any_instance.stub(:config).and_return( { 'reserved_branches' => ['dont-del-me','dont-del-me-2'] })
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return( { 'reserved_branches' => ['dont-del-me','dont-del-me-2'] })
         Socialcast::Gitx::CLI.start ['release']
       end
       it "treats the alternative base branch as reserved" do
-        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'dont-del-me'
-        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'dont-del-me-2'
+        expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'dont-del-me'
+        expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'dont-del-me-2'
       end
     end
 
@@ -208,17 +208,17 @@ describe Socialcast::Gitx::CLI do
       before do
         stub_message "#worklog releasing FOO to special-master #scgitx"
 
-        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
-        Socialcast::Gitx::CLI.any_instance.stub(:config).and_return( { 'base_branch' => 'special-master' })
-        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return( { 'base_branch' => 'special-master' })
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'should post message to socialcast' do end # see expectations
       it "treats the alternative base branch as reserved" do
-        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'special-master'
+        expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'special-master'
       end
       it 'should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin special-master",
           "git push origin HEAD",
@@ -232,7 +232,7 @@ describe Socialcast::Gitx::CLI do
           "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
-        ]
+        ])
       end
     end
 
@@ -240,9 +240,9 @@ describe Socialcast::Gitx::CLI do
       before do
         stub_message "#worklog releasing FOO to special-master #scgitx"
 
-        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
-        Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({})
-        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return({})
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:cleanup)
         ENV['BASE_BRANCH'] = 'special-master'
         Socialcast::Gitx::CLI.start ['release']
       end
@@ -250,11 +250,11 @@ describe Socialcast::Gitx::CLI do
         ENV.delete('BASE_BRANCH')
       end
       it "treats the alternative base branch as reserved" do
-        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'special-master'
+        expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'special-master'
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin special-master",
           "git push origin HEAD",
@@ -268,7 +268,7 @@ describe Socialcast::Gitx::CLI do
           "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
-        ]
+        ])
       end
     end
 
@@ -276,9 +276,9 @@ describe Socialcast::Gitx::CLI do
       before do
         stub_message "#worklog releasing FOO to special-master #scgitx"
 
-        Socialcast::Gitx::CLI.any_instance.should_receive(:yes?).and_return(true)
-        Socialcast::Gitx::CLI.any_instance.stub(:config).and_return({ 'base_branch' => 'extra-special-master' })
-        Socialcast::Gitx::CLI.any_instance.should_receive(:cleanup)
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return({ 'base_branch' => 'extra-special-master' })
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:cleanup)
         ENV['BASE_BRANCH'] = 'special-master'
         Socialcast::Gitx::CLI.start ['release']
       end
@@ -286,12 +286,12 @@ describe Socialcast::Gitx::CLI do
         ENV.delete('BASE_BRANCH')
       end
       it "treats the alternative base branch as reserved" do
-        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'special-master'
-        Socialcast::Gitx::CLI.new.send(:reserved_branches).should include 'extra-special-master'
+        expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'special-master'
+        expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'extra-special-master'
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin special-master",
           "git push origin HEAD",
@@ -305,7 +305,7 @@ describe Socialcast::Gitx::CLI do
           "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
-        ]
+        ])
       end
     end
   end
@@ -315,13 +315,13 @@ describe Socialcast::Gitx::CLI do
       before do
         prototype_branches = %w( dev-foo dev-bar )
         master_branches = %w( dev-foo )
-        Socialcast::Gitx::CLI.any_instance.should_receive(:branches).and_return(prototype_branches, master_branches, prototype_branches, master_branches)
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).and_return(prototype_branches, master_branches, prototype_branches, master_branches)
         stub_message "#worklog resetting prototype branch to last_known_good_master #scgitx\n/cc @SocialcastDevelopers\n\nthe following branches were affected:\n* dev-bar"
         Socialcast::Gitx::CLI.start ['nuke', 'prototype', '--destination', 'master']
       end
       it 'should publish message into socialcast' do end # see expectations
       it 'should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git checkout master",
           "git branch -D last_known_good_master",
           "git fetch origin",
@@ -342,7 +342,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin last_known_good_prototype",
           "git branch --set-upstream last_known_good_prototype origin/last_known_good_prototype",
           "git checkout master"
-        ]
+        ])
       end
     end
     context 'when target branch == staging and --destination == last_known_good_staging' do
@@ -352,7 +352,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.start ['nuke', 'staging', '--destination', 'last_known_good_staging']
       end
       it 'should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git checkout master",
           "git branch -D last_known_good_staging",
           "git fetch origin",
@@ -363,18 +363,18 @@ describe Socialcast::Gitx::CLI do
           "git push origin staging",
           "git branch --set-upstream staging origin/staging",
           "git checkout master"
-        ]
+        ])
       end
     end
     context 'when target branch == prototype and destination prompt == nil' do
       before do
         stub_message "#worklog resetting prototype branch to last_known_good_prototype #scgitx\n/cc @SocialcastDevelopers"
 
-        Socialcast::Gitx::CLI.any_instance.should_receive(:ask).and_return('')
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:ask).and_return('')
         Socialcast::Gitx::CLI.start ['nuke', 'prototype']
       end
       it 'defaults to last_known_good_prototype and should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git checkout master",
           "git branch -D last_known_good_prototype",
           "git fetch origin",
@@ -385,18 +385,18 @@ describe Socialcast::Gitx::CLI do
           "git push origin prototype",
           "git branch --set-upstream prototype origin/prototype",
           "git checkout master"
-        ]
+        ])
       end
     end
     context 'when target branch == prototype and destination prompt = master' do
       before do
         stub_message "#worklog resetting prototype branch to last_known_good_master #scgitx\n/cc @SocialcastDevelopers"
 
-        Socialcast::Gitx::CLI.any_instance.should_receive(:ask).and_return('master')
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:ask).and_return('master')
         Socialcast::Gitx::CLI.start ['nuke', 'prototype']
       end
       it 'should run expected commands' do
-        Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git checkout master",
           "git branch -D last_known_good_master",
           "git fetch origin",
@@ -417,15 +417,15 @@ describe Socialcast::Gitx::CLI do
           "git push origin last_known_good_prototype",
           "git branch --set-upstream last_known_good_prototype origin/last_known_good_prototype",
           "git checkout master"
-        ]
+        ])
       end
     end
     context 'when target branch != staging || prototype' do
       it 'should raise error' do
-        lambda {
-          Socialcast::Gitx::CLI.any_instance.should_receive(:ask).and_return('master')
+        expect {
+          expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:ask).and_return('master')
           Socialcast::Gitx::CLI.start ['nuke', 'asdfasdf']
-        }.should raise_error(/Only aggregate branches are allowed to be reset/)
+        }.to raise_error(/Only aggregate branches are allowed to be reset/)
       end
     end
   end
@@ -819,16 +819,11 @@ describe Socialcast::Gitx::CLI do
 
       stub_message "#reviewrequest backport #59 to v1.x #scgitx\n\n/cc @SocialcastDevelopers", :url => 'https://github.com/socialcast/socialcast-git-extensions/pulls/60', :message_type => 'review_request'
 
-      Socialcast::Gitx::CLI.any_instance.should_receive(:backportpr).and_call_original
-      Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
-        @said_text = @said_text.to_s + message
-      end
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:backportpr).and_call_original
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:post).with("#reviewrequest backport #59 to v1.x #scgitx\n\n/cc @SocialcastDevelopers", { :url => "https://github.com/socialcast/socialcast-git-extensions/pulls/60", :message_type => "review_request" })
       Socialcast::Gitx::CLI.start ['backportpr', '59', 'v1.x']
     end
-    it 'creates a branch based on v1.x and cherry-picks in PR 59' do
-      @said_text.should include "Creating pull request for backport_59_to_v1.x against v1.x in socialcast/socialcast-git-extensions"
-      @said_text.should include "Message has been posted: http://demo.socialcast.com/messages/123"
-    end
+    it 'creates a branch based on v1.x and cherry-picks in PR 59' do end
   end
 
   describe '#findpr' do
@@ -888,23 +883,18 @@ describe Socialcast::Gitx::CLI do
       stub_request(:get, "https://api.github.com/search/issues?q=abc123%20type:pr%20repo:socialcast/socialcast-git-extensions").
         with(:headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent' => 'socialcast-git-extensions'}).
         to_return(:status => 200, :body => stub_response.to_json, :headers => {})
-      Socialcast::Gitx::CLI.any_instance.should_receive(:findpr).and_call_original
-      Socialcast::Gitx::CLI.any_instance.stub(:say).with do |message|
-        @said_text = @said_text.to_s + message
-      end
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:findpr).and_call_original
+      allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:say).with("Searching github pull requests for abc123")
+      allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:say).with("\nhttps://github.com/batterseapower/pinyin-toolkit/issues/132\n\tLine Number Indexes Beyond 20 Not Displayed\n\tNick3C 2009-07-12T20:10:41Z")
       Socialcast::Gitx::CLI.start ['findpr', 'abc123']
     end
-    it 'fetches the data from github and prints it out' do
-      @said_text.should include "https://github.com/batterseapower/pinyin-toolkit/issues/132"
-      @said_text.should include "Nick3C"
-      @said_text.should include "Line Number Indexes Beyond 20 Not Displayed"
-    end
+    it 'fetches the data from github and prints it out' do end
   end
 
   describe '#reviewrequest' do
     context 'when there are no review_buddies specified' do
       before do
-        Socialcast::Gitx::CLI.any_instance.stub(:config_file).and_return(Pathname(''))
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config_file).and_return(Pathname(''))
       end
       context 'when description != nil' do
         before do
@@ -912,17 +902,17 @@ describe Socialcast::Gitx::CLI do
             to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1"}), :headers => {})
 
           stub_message "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n1 file changed", :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
-          Socialcast::Gitx::CLI.any_instance.stub(:changelog_summary).and_return('1 file changed')
+          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
         end
         it 'should create github pull request' do end # see expectations
         it 'should post socialcast message' do end # see expectations
         it 'should run expected commands' do
-          Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+          expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
             "git pull origin FOO",
             "git pull origin master",
             "git push origin HEAD"
-          ]
+          ])
         end
       end
     end
@@ -936,7 +926,7 @@ describe Socialcast::Gitx::CLI do
       context 'and additional reviewers are specified' do
         let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\n\nAssigned additionally to @JohnSmith for API review\n\ntesting\n\n1 file changed" }
         before do
-          Socialcast::Gitx::CLI.any_instance.stub(:changelog_summary).and_return('1 file changed')
+          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
           # The Review Buddy should be @mentioned in the message
           stub_message message_body, :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-a', 'a']
@@ -944,17 +934,17 @@ describe Socialcast::Gitx::CLI do
         it 'should create github pull request' do end # see expectations
         it 'should post socialcast message' do end # see expectations
         it 'should run expected commands' do
-          Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+          expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
             "git pull origin FOO",
             "git pull origin master",
             "git push origin HEAD"
-          ]
+          ])
         end
       end
       context 'and additional reviewers are not specified' do
         let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n1 file changed" }
         before do
-          Socialcast::Gitx::CLI.any_instance.stub(:changelog_summary).and_return('1 file changed')
+          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
           # The Review Buddy should be @mentioned in the message
           stub_message message_body, :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
@@ -970,7 +960,7 @@ describe Socialcast::Gitx::CLI do
       Socialcast::Gitx::CLI.start ['promote']
     end
     it 'should integrate into staging' do
-      Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+      expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
         "git pull origin FOO",
         "git pull origin master",
         "git push origin HEAD",
@@ -987,24 +977,24 @@ describe Socialcast::Gitx::CLI do
         "git push origin HEAD",
         "git checkout staging",
         "git checkout FOO"
-      ]
+      ])
     end
   end
 
   describe '#cleanup' do
     before do
-      Socialcast::Gitx::CLI.any_instance.should_receive(:branches).with(:merged => true, :remote => true).and_return(['master', 'foobar', 'last_known_good_master'])
-      Socialcast::Gitx::CLI.any_instance.should_receive(:branches).with(:merged => true).and_return(['staging', 'bazquux', 'last_known_good_prototype'])
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).with(:merged => true, :remote => true).and_return(['master', 'foobar', 'last_known_good_master'])
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).with(:merged => true).and_return(['staging', 'bazquux', 'last_known_good_prototype'])
       Socialcast::Gitx::CLI.start ['cleanup']
     end
     it 'should only cleanup non-reserved branches' do
-      Socialcast::Gitx::CLI.stubbed_executed_commands.should == [
+      expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
         "git checkout master",
         "git pull",
         "git remote prune origin",
         "git push origin --delete foobar",
         "git branch -d bazquux"
-      ]
+      ])
     end
   end
 end
