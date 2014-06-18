@@ -154,6 +154,11 @@ describe Socialcast::Gitx::CLI do
   end
 
   describe '#release' do
+    let(:branches_in_last_known_good_staging) { ['FOO'] }
+    before do
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).with(:remote => true, :merged => 'last_known_good_staging').and_return(branches_in_last_known_good_staging)
+    end
+
     context 'when user rejects release' do
       before do
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(false)
@@ -191,11 +196,22 @@ describe Socialcast::Gitx::CLI do
       end
     end
 
+    context 'when the branch is not in last_known_good_staging' do
+      let(:branches_in_last_known_good_staging) { ['another-branch'] }
+      before do
+        expect_any_instance_of(Socialcast::Gitx::CLI).not_to receive(:yes?)
+      end
+      it 'prevents the release of the branch' do
+        expect { Socialcast::Gitx::CLI.start ['release'] }.to raise_error(RuntimeError, 'Cannot release FOO unless it has already been promoted separately to staging and the build has passed.')
+      end
+    end
+
     context 'with reserved_branches via config file' do
       before do
         stub_message "#worklog releasing FOO to master #scgitx"
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
         allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return( { 'reserved_branches' => ['dont-del-me','dont-del-me-2'] })
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
       end
       it "treats the alternative base branch as reserved" do

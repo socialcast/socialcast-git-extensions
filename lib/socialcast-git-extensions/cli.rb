@@ -221,6 +221,7 @@ module Socialcast
       def release
         branch = current_branch
         assert_not_protected_branch!(branch, 'release')
+        assert_in_last_known_good_staging(branch)
 
         return unless yes?("Release #{branch} to production? (y/n)", :green)
 

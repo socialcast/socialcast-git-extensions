@@ -8,6 +8,7 @@ module Socialcast
   module Gitx
     DEFAULT_BASE_BRANCH = 'master'
     DEFAULT_STAGING_BRANCH = 'staging'
+    DEFAULT_LAST_KNOWN_GOOD_STAGING_BRANCH = 'last_known_good_staging'
     DEFAULT_PROTOTYPE_BRANCH = 'prototype'
 
     private
