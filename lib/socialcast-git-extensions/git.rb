@@ -10,7 +10,7 @@ module Socialcast
       end
 
       def assert_in_last_known_good_staging(branch)
-        branches_in_last_known_staging = branches(:remote => true, :merged => last_known_good_staging_branch)
+        branches_in_last_known_staging = branches(:remote => true, :merged => "origin/#{last_known_good_staging_branch}")
         unless branches_in_last_known_staging.include? branch
           raise "Cannot release #{branch} unless it has already been promoted separately to #{staging_branch} and the build has passed."
         end

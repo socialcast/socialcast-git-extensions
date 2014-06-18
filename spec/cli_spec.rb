@@ -156,7 +156,7 @@ describe Socialcast::Gitx::CLI do
   describe '#release' do
     let(:branches_in_last_known_good_staging) { ['FOO'] }
     before do
-      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).with(:remote => true, :merged => 'last_known_good_staging').and_return(branches_in_last_known_good_staging)
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).with(:remote => true, :merged => 'origin/last_known_good_staging').and_return(branches_in_last_known_good_staging)
     end
 
     context 'when user rejects release' do
