@@ -10,10 +10,13 @@ module Socialcast
       end
 
       def assert_in_last_known_good_staging(branch)
-        branches_in_last_known_staging = branches(:remote => true, :merged => "origin/#{last_known_good_staging_branch}")
+        refresh_branch_from_remote last_known_good_staging_branch
+        branches_in_last_known_staging = branches(:remote => true, :merged => true)
         unless branches_in_last_known_staging.include? branch
           raise "Cannot release #{branch} unless it has already been promoted separately to #{staging_branch} and the build has passed."
         end
+      ensure
+        run_cmd "git checkout #{branch}"
       end
 
       # lookup the current branch of the PWD
