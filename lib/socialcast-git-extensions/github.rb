@@ -1,6 +1,7 @@
 require 'rest_client'
 require 'json'
 require 'socialcast'
+require 'highline'
 
 module Socialcast
   module Gitx
@@ -17,7 +18,7 @@ module Socialcast
 
         username = current_user
         raise "Github user not configured.  Run: `git config --global github.user 'me@email.com'`" if username.empty?
-        password = ask("Github password for #{username}: ") { |q| q.echo = false }
+        password = HighLine.new.ask("Github password for #{username}: ") { |q| q.echo = false }
 
         payload = {:scopes => ['repo'], :note => 'Socialcast Git eXtension', :note_url => 'https://github.com/socialcast/socialcast-git-extensions'}.to_json
         response = RestClient::Request.new(:url => "https://api.github.com/authorizations", :method => "POST", :user => username, :password => password, :payload => payload, :headers => {:accept => :json, :content_type => :json, :user_agent => 'socialcast-git-extensions'}).execute
