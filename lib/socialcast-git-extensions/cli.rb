@@ -64,8 +64,7 @@ module Socialcast
         url = create_pull_request branch, repo, description, assignee
         say "Pull request created: #{url}"
 
-        short_description = description.split("\n").first(5).join("\n")
-        review_message = ["#reviewrequest for #{branch} #scgitx", "/cc @SocialcastDevelopers", review_mention, short_description, changelog_summary(branch)].compact.join("\n\n")
+        review_message = ["#reviewrequest for #{branch} #scgitx", "/cc @SocialcastDevelopers", review_mention, description, changelog_summary(branch)].compact.join("\n\n")
         post review_message, :url => url, :message_type => 'review_request'
       end
 
