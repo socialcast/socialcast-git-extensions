@@ -64,7 +64,7 @@ module Socialcast
         url = create_pull_request branch, repo, description, assignee
         say "Pull request created: #{url}"
 
-        review_message = ["#reviewrequest for #{branch} #scgitx", "/cc @SocialcastDevelopers", review_mention, description, changelog_summary(branch)].compact.join("\n\n")
+        review_message = ["#reviewrequest for #{branch} #scgitx", "/cc @#{developer_group}", review_mention, description, changelog_summary(branch)].compact.join("\n\n")
         post review_message, :url => url, :message_type => 'review_request'
       end
 
@@ -108,7 +108,7 @@ module Socialcast
         if socialcast_reviewer
           review_message << "/cc @#{socialcast_reviewer} for #backport track"
         end
-        review_message << "/cc @SocialcastDevelopers"
+        review_message << "/cc @#{developer_group}"
         post review_message.join("\n\n"), :url => pull_request_url, :message_type => 'review_request'
       ensure
         ENV['BASE_BRANCH'] = original_base_branch
@@ -207,7 +207,7 @@ module Socialcast
 
         message_parts = []
         message_parts << "#worklog resetting #{bad_branch} branch to #{good_branch} #scgitx"
-        message_parts << "/cc @SocialcastDevelopers"
+        message_parts << "/cc @#{developer_group}"
         if removed_branches.any?
           message_parts << ""
           message_parts << "the following branches were affected:"
@@ -236,6 +236,10 @@ module Socialcast
       end
 
       private
+
+      def developer_group
+        config['developer_group'] || 'SocialcastDevelopers'
+      end
 
       # post a message in socialcast
       # skip sharing message if CLI quiet option is present

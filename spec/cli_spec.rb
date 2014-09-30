@@ -973,6 +973,18 @@ describe Socialcast::Gitx::CLI do
           ])
         end
       end
+      context 'and a developer group is specified' do
+        let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @#{another_group}\n\ntesting\n\n1 file changed" }
+        let(:another_group) { 'AnotherDeveloperGroup' }
+        before do
+          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
+          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return({'developer_group' => another_group})
+          # The Review Buddy should be @mentioned in the message
+          stub_message message_body, :url => 'http://github.com/repo/project/pulls/1', :message_type => 'review_request'
+          Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+        end
+        it 'should create github pull request with a different group mentioned' do end # see expectations
+      end
       context 'and additional reviewers are not specified' do
         let(:message_body) { "#reviewrequest for FOO #scgitx\n\n/cc @SocialcastDevelopers\n\ntesting\n\n1 file changed" }
         before do
