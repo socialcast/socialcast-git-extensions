@@ -4,6 +4,7 @@ require 'socialcast-git-extensions'
 require 'socialcast'
 require 'socialcast/command_line/message'
 require 'highline/import'
+require 'active_support/core_ext'
 
 module Socialcast
   module Gitx
@@ -64,7 +65,7 @@ module Socialcast
         url = create_pull_request branch, repo, description, assignee
         say "Pull request created: #{url}"
 
-        review_message = ["#reviewrequest for #{branch} #scgitx", "/cc @#{developer_group}", review_mention, description, changelog_summary(branch)].compact.join("\n\n")
+        review_message = ["#reviewrequest for #{branch} in #{current_repo} #scgitx", "/cc @#{developer_group}", review_mention, description, changelog_summary(branch)].compact.join("\n\n")
         post review_message, :url => url, :message_type => 'review_request'
       end
 
@@ -104,7 +105,7 @@ module Socialcast
 
         pull_request_url = create_pull_request(backport_branch, repo, description, assignee)
 
-        review_message = ["#reviewrequest backport ##{pull_request_num} to #{maintenance_branch} #scgitx"]
+        review_message = ["#reviewrequest backport ##{pull_request_num} to #{maintenance_branch} in #{current_repo} #scgitx"]
         if socialcast_reviewer
           review_message << "/cc @#{socialcast_reviewer} for #backport track"
         end
@@ -168,7 +169,12 @@ module Socialcast
         run_cmd 'git pull'
         run_cmd "git checkout -b #{branch_name}"
 
-        post "#worklog starting work on #{branch_name} #scgitx"
+        message = <<-EOS.strip_heredoc
+          #worklog starting work on #{branch_name} in #{current_repo} #scgitx
+          /cc @#{developer_group}
+        EOS
+
+        post message.strip
       end
 
       desc 'share', 'Share the current branch in the remote repository'
@@ -185,7 +191,12 @@ module Socialcast
         integrate_branch(target_branch, prototype_branch) if target_branch == staging_branch
         run_cmd "git checkout #{branch}"
 
-        post "#worklog integrating #{branch} into #{target_branch} #scgitx"
+        message = <<-EOS.strip_heredoc
+          #worklog integrating #{branch} into #{target_branch} in #{current_repo} #scgitx
+          /cc @#{developer_group}
+        EOS
+
+        post message.strip
       end
 
       desc 'promote', '(DEPRECATED) promote the current branch into staging'
@@ -205,15 +216,20 @@ module Socialcast
         removed_branches = nuke_branch(bad_branch, good_branch)
         nuke_branch("last_known_good_#{bad_branch}", good_branch)
 
-        message_parts = []
-        message_parts << "#worklog resetting #{bad_branch} branch to #{good_branch} #scgitx"
-        message_parts << "/cc @#{developer_group}"
+        message = <<-EOS.strip_heredoc
+          #worklog resetting #{bad_branch} branch to #{good_branch} in #{current_repo} #scgitx
+          /cc @#{developer_group}
+        EOS
+
         if removed_branches.any?
-          message_parts << ""
-          message_parts << "the following branches were affected:"
-          message_parts += removed_branches.map{|b| ['*', b].join(' ')}
+          message += <<-EOS.strip_heredoc
+
+            the following branches were affected:
+            #{removed_branches.map{|b| ['*', b].join(' ')}.join("\n")}
+          EOS
         end
-        post message_parts.join("\n")
+
+        post message.strip
       end
 
       desc 'release', 'release the current branch to production'
@@ -232,7 +248,12 @@ module Socialcast
         integrate_branch(base_branch, staging_branch)
         cleanup
 
-        post "#worklog releasing #{branch} to #{base_branch} #scgitx"
+        message = <<-EOS.strip_heredoc
+          #worklog releasing #{branch} to #{base_branch} in #{current_repo} #scgitx
+          /cc @#{developer_group}
+        EOS
+
+        post message.strip
       end
 
       private
