@@ -152,7 +152,8 @@ describe Socialcast::Gitx::CLI do
   describe '#release' do
     let(:branches_in_last_known_good_staging) { ['FOO'] }
     before do
-      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).with(:remote => true, :merged => true).and_return(branches_in_last_known_good_staging)
+      allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:enforce_staging_before_release?).and_return(true)
+      allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).with(:remote => true, :merged => true).and_return(branches_in_last_known_good_staging)
     end
 
     context 'when user rejects release' do
@@ -197,12 +198,42 @@ describe Socialcast::Gitx::CLI do
     end
 
     context 'when the branch is not in last_known_good_staging' do
-      let(:branches_in_last_known_good_staging) { ['another-branch'] }
-      before do
-        expect_any_instance_of(Socialcast::Gitx::CLI).not_to receive(:yes?)
+      context 'and enforce_staging_before_release = true' do
+        let(:branches_in_last_known_good_staging) { ['another-branch'] }
+        before do
+          expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:enforce_staging_before_release?).and_return(true)
+          expect_any_instance_of(Socialcast::Gitx::CLI).not_to receive(:yes?)
+        end
+        it 'prevents the release of the branch' do
+          expect { Socialcast::Gitx::CLI.start ['release'] }.to raise_error(RuntimeError, 'Cannot release FOO unless it has already been promoted separately to staging and the build has passed.')
+        end
       end
-      it 'prevents the release of the branch' do
-        expect { Socialcast::Gitx::CLI.start ['release'] }.to raise_error(RuntimeError, 'Cannot release FOO unless it has already been promoted separately to staging and the build has passed.')
+      context 'and enforce_staging_before_release = false' do
+        let(:branches_in_last_known_good_staging) { ['another-branch'] }
+        before do
+          stub_message "#worklog releasing FOO to master in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
+          expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:enforce_staging_before_release?).and_return(false)
+          expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
+          expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:cleanup)
+          Socialcast::Gitx::CLI.start ['release']
+        end
+        it 'should run expected commands' do
+          expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+            "git pull origin FOO",
+            "git pull origin master",
+            "git push origin HEAD",
+            "git checkout master",
+            "git pull origin master",
+            "git pull . FOO",
+            "git push origin HEAD",
+            "git branch -D staging",
+            "git fetch origin",
+            "git checkout staging",
+            "git pull . master",
+            "git push origin HEAD",
+            "git checkout master"
+          ])
+        end
       end
     end
 

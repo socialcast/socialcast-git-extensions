@@ -236,7 +236,10 @@ module Socialcast
       def release
         branch = current_branch
         assert_not_protected_branch!(branch, 'release')
-        assert_in_last_known_good_staging(branch)
+
+        if enforce_staging_before_release?
+          assert_in_last_known_good_staging(branch)
+        end
 
         return unless yes?("Release #{branch} to production? (y/n)", :green)
 
@@ -260,6 +263,10 @@ module Socialcast
 
       def developer_group
         config['developer_group'] || 'SocialcastDevelopers'
+      end
+
+      def enforce_staging_before_release?
+        !!config['enforce_staging_before_release']
       end
 
       # post a message in socialcast
