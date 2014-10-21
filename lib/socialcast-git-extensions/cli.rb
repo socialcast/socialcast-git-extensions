@@ -226,7 +226,7 @@ module Socialcast
 
             The following branches were affected:
           EOS
-          message += @removed_branches.map{ |b| ['*', b].join(' ') }.join("\n")
+          message += removed_branches.map{ |b| ['*', b].join(' ') }.join("\n")
         end
 
         post message.strip
