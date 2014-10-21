@@ -372,10 +372,10 @@ describe Socialcast::Gitx::CLI do
   describe '#nuke' do
     context 'when target branch == prototype and --destination == master' do
       before do
-        prototype_branches = %w( dev-foo dev-bar )
+        prototype_branches = %w( dev-foo dev-bar dev-baz )
         master_branches = %w( dev-foo )
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).and_return(prototype_branches, master_branches, prototype_branches, master_branches)
-        stub_message "#worklog resetting prototype branch to last_known_good_master in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers\n\nthe following branches were affected:\n* dev-bar"
+        stub_message "#worklog resetting prototype branch to last_known_good_master in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers\n\nThe following branches were affected:\n* dev-bar\n* dev-baz"
         Socialcast::Gitx::CLI.start ['nuke', 'prototype', '--destination', 'master']
       end
       it 'should publish message into socialcast' do end # see expectations

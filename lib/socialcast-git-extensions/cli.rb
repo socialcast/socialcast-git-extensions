@@ -224,9 +224,9 @@ module Socialcast
         if removed_branches.any?
           message += <<-EOS.strip_heredoc
 
-            the following branches were affected:
-            #{removed_branches.map{|b| ['*', b].join(' ')}.join("\n")}
+            The following branches were affected:
           EOS
+          message += removed_branches.map{ |b| ['*', b].join(' ') }.join("\n")
         end
 
         post message.strip
