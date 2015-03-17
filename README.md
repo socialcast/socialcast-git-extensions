@@ -4,7 +4,25 @@
 # Core Git Extensions
 
 ### Install
-  socialcast authenticate --domain (your domain)
+  `gem install socialcast-git-extensions`
+
+  Test the installation by running
+
+  `socialcast authenticate --domain (your domain)`
+
+  Where "(your domain)" woudl be the fully qualified domain name of the Socialcast community you will use for work e.g. [er.staging.socialcast.com](https://er.staging.socialcast.com)
+
+#### Token Installation
+Access the [Application settings](https://github.com/settings/applications) of your github.com account and select "*Generate new token*" or use an existing Github Application token. Store the token in  `~/.socialcast/credentials.yml`. Example:
+```yaml
+---
+:domain: er.staging.socialcast.com
+:proxy:
+:user: person@example.com
+:password: supersecret
+:scgitx_token: 030000e600000000000000aaaaaaaaabbbbbbbbb
+```
+Test the token with the [`git findpr`](https://github.com/socialcast/socialcast-git-extensions#git-findpr-) command.
 
 ### Options
 * ```--quiet```: suppress posting message in Socialcast
