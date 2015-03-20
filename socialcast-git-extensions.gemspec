@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = Socialcast::Gitx::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Socialcast"]
-  s.email       = ["operations@socialcast.com"]
+  s.email       = ["developers@socialcast.com"]
   s.homepage    = "http://github.com/socialcast/socialcast-git-extensions"
   s.summary     = %q{git extension scripts for socialcast workflow}
   s.description = %q{GIT it done!}
