@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'activesupport', '~> 4.0'
   s.add_runtime_dependency 'rest-client', '~> 1.6'
   s.add_runtime_dependency 'thor', '~> 0.19.1'
-  s.add_runtime_dependency 'rake', '~> 10.3.2'
+  s.add_runtime_dependency 'rake', '~> 10.3'
   s.add_development_dependency 'rspec', '~> 3.0.0'
   s.add_development_dependency 'pry', '~>  0.9.12.6'
   s.add_development_dependency 'webmock', '~> 1.18.0'
