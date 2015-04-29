@@ -36,10 +36,11 @@ module Socialcast
       def reviewrequest(*additional_reviewers)
         update
 
-        review_mention = if buddy = socialcast_review_buddy(current_user)
-          "Assigned to @#{buddy}"
+        primary_mention = if buddy = socialcast_review_buddy(current_user)
+          "assigned to @#{buddy}"
         end
 
+        secondary_mention = nil
         if !specialty_reviewers.empty? && !options.key?('skip_additional_reviewers')
           additional_reviewers = options[:additional_reviewers] || additional_reviewers
 
@@ -52,8 +53,8 @@ module Socialcast
 
           (specialty_reviewers.keys & additional_reviewers).each do |command|
             reviewer = specialty_reviewers[command]
-            review_mention = review_mention || ''
-            review_mention += "\nAssigned additionally to @#{reviewer['socialcast_username']} for #{reviewer['label']} review"
+            secondary_mention ||= ''
+            secondary_mention += "\nAssigned additionally to @#{reviewer['socialcast_username']} for #{reviewer['label']} review"
           end
         end
 
@@ -65,8 +66,8 @@ module Socialcast
         url = create_pull_request branch, repo, description, assignee
         say "Pull request created: #{url}"
 
-        review_message = ["#reviewrequest for #{branch} in #{current_repo} #scgitx", "/cc @#{developer_group}", review_mention, description, changelog_summary(branch)].compact.join("\n\n")
-        post review_message, :url => url, :message_type => 'review_request'
+        review_message = ["#reviewrequest for #{branch} in #{current_repo}", "PR #{url} #{primary_mention}", '', description, '', secondary_mention, "/cc @#{developer_group} #scgitx", '', changelog_summary(branch)].compact.join("\n").gsub(/\n{2,}/, "\n\n")
+        post review_message, :message_type => 'review_request'
       end
 
       desc "findpr", "Find pull requests including a given commit"
