@@ -23,6 +23,7 @@ describe Socialcast::Gitx::CLI do
     end
 
     Socialcast::Gitx::CLI.stubbed_executed_commands = []
+    allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:say)
     allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:current_branch).and_return('FOO')
     allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:current_user).and_return('wireframe')
     allow(Socialcast::CommandLine).to receive(:credentials).and_return(:domain => 'testdomain', :user => 'testuser', :password => 'testpassword', :scgitx_token => 'faketoken')
