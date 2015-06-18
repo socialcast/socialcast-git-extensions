@@ -225,7 +225,7 @@ module Socialcast
       end
 
       def aggregate_branches
-        @aggregate_branches ||= [staging_branch, prototype_branch]
+        @aggregate_branches ||= ((config['aggregate_branches'] || []) + [staging_branch, prototype_branch]).uniq
       end
 
       def reserved_branches

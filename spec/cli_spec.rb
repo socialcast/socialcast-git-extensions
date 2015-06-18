@@ -371,40 +371,6 @@ describe Socialcast::Gitx::CLI do
   end
 
   describe '#nuke' do
-    context 'when target branch == prototype and --destination == master' do
-      before do
-        prototype_branches = %w( dev-foo dev-bar dev-baz )
-        master_branches = %w( dev-foo )
-        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).and_return(prototype_branches, master_branches, prototype_branches, master_branches)
-        stub_message "#worklog resetting prototype branch to last_known_good_master in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers\n\nThe following branches were affected:\n* dev-bar\n* dev-baz"
-        Socialcast::Gitx::CLI.start ['nuke', 'prototype', '--destination', 'master']
-      end
-      it 'should publish message into socialcast' do end # see expectations
-      it 'should run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
-          "git checkout master",
-          "git branch -D last_known_good_master",
-          "git fetch origin",
-          "git checkout last_known_good_master",
-          "git branch -D prototype",
-          "git push origin --delete prototype",
-          "git checkout -b prototype",
-          "git push origin prototype",
-          "git branch --set-upstream prototype origin/prototype",
-          "git checkout master",
-          "git checkout master",
-          "git branch -D last_known_good_master",
-          "git fetch origin",
-          "git checkout last_known_good_master",
-          "git branch -D last_known_good_prototype",
-          "git push origin --delete last_known_good_prototype",
-          "git checkout -b last_known_good_prototype",
-          "git push origin last_known_good_prototype",
-          "git branch --set-upstream last_known_good_prototype origin/last_known_good_prototype",
-          "git checkout master"
-        ])
-      end
-    end
     context 'when target branch == staging and --destination == last_known_good_staging' do
       before do
         stub_message "#worklog resetting staging branch to last_known_good_staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
@@ -421,39 +387,39 @@ describe Socialcast::Gitx::CLI do
           "git push origin --delete staging",
           "git checkout -b staging",
           "git push origin staging",
-          "git branch --set-upstream staging origin/staging",
+          "git branch -u staging origin/staging",
           "git checkout master"
         ])
       end
     end
-    context 'when target branch == prototype and destination prompt == nil' do
+    context 'when target branch == qa and destination prompt == nil and using custom aggregate_branches config' do
       before do
-        stub_message "#worklog resetting prototype branch to last_known_good_prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
-
+        stub_message "#worklog resetting qa branch to last_known_good_qa in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return( { 'aggregate_branches' => ['staging', 'qa'] })
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:ask).and_return('')
-        Socialcast::Gitx::CLI.start ['nuke', 'prototype']
+        Socialcast::Gitx::CLI.start ['nuke', 'qa']
       end
-      it 'defaults to last_known_good_prototype and should run expected commands' do
+      it 'defaults to last_known_good_qa and should run expected commands' do
         expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
           "git checkout master",
-          "git branch -D last_known_good_prototype",
+          "git branch -D last_known_good_qa",
           "git fetch origin",
-          "git checkout last_known_good_prototype",
-          "git branch -D prototype",
-          "git push origin --delete prototype",
-          "git checkout -b prototype",
-          "git push origin prototype",
-          "git branch --set-upstream prototype origin/prototype",
+          "git checkout last_known_good_qa",
+          "git branch -D qa",
+          "git push origin --delete qa",
+          "git checkout -b qa",
+          "git push origin qa",
+          "git branch -u qa origin/qa",
           "git checkout master"
         ])
       end
     end
-    context 'when target branch == prototype and destination prompt = master' do
+    context 'when target branch == qa and destination prompt = master and using custom aggregate_branches config' do
       before do
-        stub_message "#worklog resetting prototype branch to last_known_good_master in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
-
+        stub_message "#worklog resetting qa branch to last_known_good_master in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return( { 'aggregate_branches' => ['staging', 'qa'] })
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:ask).and_return('master')
-        Socialcast::Gitx::CLI.start ['nuke', 'prototype']
+        Socialcast::Gitx::CLI.start ['nuke', 'qa']
       end
       it 'should run expected commands' do
         expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
@@ -461,32 +427,30 @@ describe Socialcast::Gitx::CLI do
           "git branch -D last_known_good_master",
           "git fetch origin",
           "git checkout last_known_good_master",
-          "git branch -D prototype",
-          "git push origin --delete prototype",
-          "git checkout -b prototype",
-          "git push origin prototype",
-          "git branch --set-upstream prototype origin/prototype",
+          "git branch -D qa",
+          "git push origin --delete qa",
+          "git checkout -b qa",
+          "git push origin qa",
+          "git branch -u qa origin/qa",
           "git checkout master",
           "git checkout master",
           "git branch -D last_known_good_master",
           "git fetch origin",
           "git checkout last_known_good_master",
-          "git branch -D last_known_good_prototype",
-          "git push origin --delete last_known_good_prototype",
-          "git checkout -b last_known_good_prototype",
-          "git push origin last_known_good_prototype",
-          "git branch --set-upstream last_known_good_prototype origin/last_known_good_prototype",
+          "git branch -D last_known_good_qa",
+          "git push origin --delete last_known_good_qa",
+          "git checkout -b last_known_good_qa",
+          "git push origin last_known_good_qa",
+          "git branch -u last_known_good_qa origin/last_known_good_qa",
           "git checkout master"
         ])
       end
     end
-    context 'when target branch != staging || prototype' do
-      it 'should raise error' do
-        expect {
-          expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:ask).and_return('master')
-          Socialcast::Gitx::CLI.start ['nuke', 'asdfasdf']
-        }.to raise_error(/Only aggregate branches are allowed to be reset/)
-      end
+    it 'raises an error when target branch is not an aggregate branch' do
+      expect {
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:ask).and_return('master')
+        Socialcast::Gitx::CLI.start ['nuke', 'asdfasdf']
+      }.to raise_error(/Only aggregate branches are allowed to be reset/)
     end
   end
 

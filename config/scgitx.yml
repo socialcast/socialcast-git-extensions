@@ -21,4 +21,8 @@ base_branch: master
 staging_branch: staging
 prototype_branch: prototype
 
+aggregate_branches:
+  - prototype
+  - staging
+
 enforce_staging_before_release: true
