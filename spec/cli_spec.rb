@@ -382,7 +382,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin --delete staging",
           "git checkout -b staging",
           "git push origin staging",
-          "git branch --track origin/staging",
+          "git branch --set-upstream-to=origin/staging staging",
           "git checkout master"
         ])
       end
@@ -404,7 +404,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin --delete qa",
           "git checkout -b qa",
           "git push origin qa",
-          "git branch --track origin/qa",
+          "git branch --set-upstream-to=origin/qa qa",
           "git checkout master"
         ])
       end
@@ -426,7 +426,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin --delete qa",
           "git checkout -b qa",
           "git push origin qa",
-          "git branch --track origin/qa",
+          "git branch --set-upstream-to=origin/qa qa",
           "git checkout master",
           "git checkout master",
           "git branch -D last_known_good_master",
@@ -436,7 +436,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin --delete last_known_good_qa",
           "git checkout -b last_known_good_qa",
           "git push origin last_known_good_qa",
-          "git branch --track origin/last_known_good_qa",
+          "git branch --set-upstream-to=origin/last_known_good_qa last_known_good_qa",
           "git checkout master"
         ])
       end
