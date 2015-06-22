@@ -104,7 +104,7 @@ module Socialcast
       end
 
       def track_branch(branch)
-        run_cmd "git branch --track origin/#{branch}"
+        run_cmd "git branch --set-upstream-to=origin/#{branch} #{branch}"
       end
 
       # integrate a branch into a destination aggregate branch
