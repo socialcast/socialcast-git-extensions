@@ -1,17 +1,7 @@
 require 'spec_helper'
 
 describe Socialcast::Gitx::CLI do
-  # stub methods on cli
-  class Socialcast::Gitx::CLI
-    class << self
-      attr_accessor :stubbed_executed_commands
-    end
-    private
-    # stub out command execution and record commands for test inspection
-    def run_cmd(cmd)
-      self.class.stubbed_executed_commands << cmd
-    end
-  end
+  let(:stubbed_executed_commands) { [] }
 
   def stub_message(message_body, params = {})
     expect(Socialcast::CommandLine::Message).to receive(:create).with(params.merge(:body => message_body)).and_return(double(:permalink_url => 'https://community.socialcast.com/messages/1234'))
@@ -21,8 +11,13 @@ describe Socialcast::Gitx::CLI do
     Socialcast::Gitx::CLI.instance_eval do # to supress warning from stubbing ldap_config
       @no_tasks = @no_commands = true
     end
-
-    Socialcast::Gitx::CLI.stubbed_executed_commands = []
+    allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:run_cmd) do |_instance, cmd|
+      stubbed_executed_commands << cmd
+    end
+    allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:'`') do |_instance, cmd|
+      raise "Unstubbed backticks detected"
+    end
+    allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:current_repo).and_return('socialcast/socialcast-git-extensions')
     allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:say)
     allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:current_branch).and_return('FOO')
     allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:current_user).and_return('wireframe')
@@ -36,7 +31,7 @@ describe Socialcast::Gitx::CLI do
     end
     it 'should not post message to socialcast' do end # see expectations
     it 'should run expected commands' do
-      expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+      expect(stubbed_executed_commands).to eq([
         'git pull origin FOO',
         'git pull origin master',
         'git push origin HEAD'
@@ -53,7 +48,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should default to prototype' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
@@ -77,7 +72,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should default to prototype' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
@@ -99,7 +94,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
@@ -121,7 +116,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should also integrate into prototype and run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git pull origin FOO",
           "git pull origin master",
           "git push origin HEAD",
@@ -163,7 +158,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.start ['release']
       end
       it 'does not try and release the branch' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq(["git branch -D last_known_good_staging", "git fetch origin", "git checkout last_known_good_staging", "git checkout FOO"])
+        expect(stubbed_executed_commands).to eq(["git branch -D last_known_good_staging", "git fetch origin", "git checkout last_known_good_staging", "git checkout FOO"])
       end
     end
     context 'when user confirms release' do
@@ -176,7 +171,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git branch -D last_known_good_staging",
           "git fetch origin",
           "git checkout last_known_good_staging",
@@ -219,7 +214,7 @@ describe Socialcast::Gitx::CLI do
           Socialcast::Gitx::CLI.start ['release']
         end
         it 'should run expected commands' do
-          expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+          expect(stubbed_executed_commands).to eq([
             "git pull origin FOO",
             "git pull origin master",
             "git push origin HEAD",
@@ -266,7 +261,7 @@ describe Socialcast::Gitx::CLI do
         expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'special-master'
       end
       it 'should run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git branch -D last_known_good_staging",
           "git fetch origin",
           "git checkout last_known_good_staging",
@@ -306,7 +301,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git branch -D last_known_good_staging",
           "git fetch origin",
           "git checkout last_known_good_staging",
@@ -347,7 +342,7 @@ describe Socialcast::Gitx::CLI do
       end
       it 'should post message to socialcast' do end # see expectations
       it 'should run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git branch -D last_known_good_staging",
           "git fetch origin",
           "git checkout last_known_good_staging",
@@ -371,14 +366,14 @@ describe Socialcast::Gitx::CLI do
   end
 
   describe '#nuke' do
+    before { allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).and_return([]) }
     context 'when target branch == staging and --destination == last_known_good_staging' do
       before do
         stub_message "#worklog resetting staging branch to last_known_good_staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
-
         Socialcast::Gitx::CLI.start ['nuke', 'staging', '--destination', 'last_known_good_staging']
       end
       it 'should run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git checkout master",
           "git branch -D last_known_good_staging",
           "git fetch origin",
@@ -387,7 +382,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin --delete staging",
           "git checkout -b staging",
           "git push origin staging",
-          "git branch -u staging origin/staging",
+          "git branch --track origin/staging",
           "git checkout master"
         ])
       end
@@ -400,7 +395,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.start ['nuke', 'qa']
       end
       it 'defaults to last_known_good_qa and should run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git checkout master",
           "git branch -D last_known_good_qa",
           "git fetch origin",
@@ -409,7 +404,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin --delete qa",
           "git checkout -b qa",
           "git push origin qa",
-          "git branch -u qa origin/qa",
+          "git branch --track origin/qa",
           "git checkout master"
         ])
       end
@@ -422,7 +417,7 @@ describe Socialcast::Gitx::CLI do
         Socialcast::Gitx::CLI.start ['nuke', 'qa']
       end
       it 'should run expected commands' do
-        expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+        expect(stubbed_executed_commands).to eq([
           "git checkout master",
           "git branch -D last_known_good_master",
           "git fetch origin",
@@ -431,7 +426,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin --delete qa",
           "git checkout -b qa",
           "git push origin qa",
-          "git branch -u qa origin/qa",
+          "git branch --track origin/qa",
           "git checkout master",
           "git checkout master",
           "git branch -D last_known_good_master",
@@ -441,7 +436,7 @@ describe Socialcast::Gitx::CLI do
           "git push origin --delete last_known_good_qa",
           "git checkout -b last_known_good_qa",
           "git push origin last_known_good_qa",
-          "git branch -u last_known_good_qa origin/last_known_good_qa",
+          "git branch --track origin/last_known_good_qa",
           "git checkout master"
         ])
       end
@@ -931,7 +926,7 @@ describe Socialcast::Gitx::CLI do
         it 'should create github pull request' do end # see expectations
         it 'should post socialcast message' do end # see expectations
         it 'should run expected commands' do
-          expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+          expect(stubbed_executed_commands).to eq([
             "git pull origin FOO",
             "git pull origin master",
             "git push origin HEAD"
@@ -957,7 +952,7 @@ describe Socialcast::Gitx::CLI do
         it 'should create github pull request' do end # see expectations
         it 'should post socialcast message' do end # see expectations
         it 'should run expected commands' do
-          expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+          expect(stubbed_executed_commands).to eq([
             "git pull origin FOO",
             "git pull origin master",
             "git push origin HEAD"
@@ -993,7 +988,7 @@ describe Socialcast::Gitx::CLI do
       Socialcast::Gitx::CLI.start ['promote']
     end
     it 'should integrate into staging' do
-      expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+      expect(stubbed_executed_commands).to eq([
         "git pull origin FOO",
         "git pull origin master",
         "git push origin HEAD",
@@ -1021,7 +1016,7 @@ describe Socialcast::Gitx::CLI do
       Socialcast::Gitx::CLI.start ['cleanup']
     end
     it 'should only cleanup non-reserved branches' do
-      expect(Socialcast::Gitx::CLI.stubbed_executed_commands).to eq([
+      expect(stubbed_executed_commands).to eq([
         "git checkout master",
         "git pull",
         "git remote prune origin",

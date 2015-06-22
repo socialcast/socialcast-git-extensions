@@ -104,7 +104,7 @@ module Socialcast
       end
 
       def track_branch(branch)
-        run_cmd "git branch -u #{branch} origin/#{branch}"
+        run_cmd "git branch --track origin/#{branch}"
       end
 
       # integrate a branch into a destination aggregate branch

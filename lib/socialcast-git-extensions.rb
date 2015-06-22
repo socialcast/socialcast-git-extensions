@@ -15,6 +15,7 @@ module Socialcast
 
     # execute a shell command and raise an error if non-zero exit code is returned
     def run_cmd(cmd)
+      raise "Unstubbed git command #{cmd}" if ENV['SCGITX_TEST'] == 'true'
       say "\n$ "
       say cmd.gsub("'", ''), :red
       raise "#{cmd} failed" unless system cmd
