@@ -7,6 +7,8 @@ require 'pry'
 
 require 'socialcast-git-extensions/cli'
 
+ENV['SCGITX_TEST'] = 'true'
+
 RSpec.configure do |config|
   config.mock_with :rspec
 
