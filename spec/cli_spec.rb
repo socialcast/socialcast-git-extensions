@@ -55,7 +55,7 @@ describe Socialcast::Gitx::CLI do
           "git branch -D prototype",
           "git fetch origin",
           "git checkout prototype",
-          "git pull --no-ff -m 'scgitx: integrating FOO into prototype' . FOO",
+          "git pull . FOO",
           "git push origin HEAD",
           "git checkout FOO",
           "git checkout FOO"
@@ -79,7 +79,7 @@ describe Socialcast::Gitx::CLI do
           "git branch -D special-prototype",
           "git fetch origin",
           "git checkout special-prototype",
-          "git pull --no-ff -m 'scgitx: integrating FOO into special-prototype' . FOO",
+          "git pull . FOO",
           "git push origin HEAD",
           "git checkout FOO",
           "git checkout FOO"
@@ -101,7 +101,7 @@ describe Socialcast::Gitx::CLI do
           "git branch -D prototype",
           "git fetch origin",
           "git checkout prototype",
-          "git pull --no-ff -m 'scgitx: integrating FOO into prototype' . FOO",
+          "git pull . FOO",
           "git push origin HEAD",
           "git checkout FOO",
           "git checkout FOO"
@@ -123,13 +123,13 @@ describe Socialcast::Gitx::CLI do
           "git branch -D staging",
           "git fetch origin",
           "git checkout staging",
-          "git pull --no-ff -m 'scgitx: integrating FOO into staging' . FOO",
+          "git pull . FOO",
           "git push origin HEAD",
           "git checkout FOO",
           "git branch -D prototype",
           "git fetch origin",
           "git checkout prototype",
-          "git pull --no-ff -m 'scgitx: integrating staging into prototype' . staging",
+          "git pull . staging",
           "git push origin HEAD",
           "git checkout staging",
           "git checkout FOO"
@@ -186,7 +186,7 @@ describe Socialcast::Gitx::CLI do
           "git branch -D staging",
           "git fetch origin",
           "git checkout staging",
-          "git pull --no-ff -m 'scgitx: integrating master into staging' . master",
+          "git pull . master",
           "git push origin HEAD",
           "git checkout master"
         ])
@@ -225,7 +225,7 @@ describe Socialcast::Gitx::CLI do
             "git branch -D staging",
             "git fetch origin",
             "git checkout staging",
-            "git pull --no-ff -m 'scgitx: integrating master into staging' . master",
+            "git pull . master",
             "git push origin HEAD",
             "git checkout master"
           ])
@@ -276,7 +276,7 @@ describe Socialcast::Gitx::CLI do
           "git branch -D staging",
           "git fetch origin",
           "git checkout staging",
-          "git pull --no-ff -m 'scgitx: integrating special-master into staging' . special-master",
+          "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
         ])
@@ -316,7 +316,7 @@ describe Socialcast::Gitx::CLI do
           "git branch -D staging",
           "git fetch origin",
           "git checkout staging",
-          "git pull --no-ff -m 'scgitx: integrating special-master into staging' . special-master",
+          "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
         ])
@@ -357,7 +357,7 @@ describe Socialcast::Gitx::CLI do
           "git branch -D staging",
           "git fetch origin",
           "git checkout staging",
-          "git pull --no-ff -m 'scgitx: integrating special-master into staging' . special-master",
+          "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
         ])
@@ -995,13 +995,13 @@ describe Socialcast::Gitx::CLI do
         "git branch -D staging",
         "git fetch origin",
         "git checkout staging",
-        "git pull --no-ff -m 'scgitx: integrating FOO into staging' . FOO",
+        "git pull . FOO",
         "git push origin HEAD",
         "git checkout FOO",
         "git branch -D prototype",
         "git fetch origin",
         "git checkout prototype",
-        "git pull --no-ff -m 'scgitx: integrating staging into prototype' . staging",
+        "git pull . staging",
         "git push origin HEAD",
         "git checkout staging",
         "git checkout FOO"
