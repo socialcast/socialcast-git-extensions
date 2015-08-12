@@ -247,7 +247,7 @@ module Socialcast
         update
         run_cmd "git checkout #{base_branch}"
         run_cmd "git pull origin #{base_branch}"
-        run_cmd "git pull . #{branch}"
+        run_cmd "git pull --no-ff -m 'scgitx: releasing #{branch} to #{base_branch}' . #{branch}"
         run_cmd "git push origin HEAD"
         integrate_branch(base_branch, staging_branch)
         cleanup

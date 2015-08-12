@@ -120,7 +120,7 @@ module Socialcast
         say destination_branch, :green
 
         refresh_branch_from_remote destination_branch
-        run_cmd "git pull . #{branch}"
+        run_cmd "git pull --no-ff -m 'scgitx: integrating #{branch} into #{destination_branch}' . #{branch}"
         run_cmd "git push origin HEAD"
         run_cmd "git checkout #{branch}"
       end
