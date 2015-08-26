@@ -3,8 +3,8 @@ require 'spec_helper'
 describe Socialcast::Gitx::Git do
   before do
     stub_const 'TestClass', Class.new { |k| include Socialcast::Gitx::Git }
-    allow_any_instance_of(TestClass).to receive(:'`') do |_instance, cmd|
-      raise "Unstubbed backticks detected"
+    allow_any_instance_of(TestClass).to receive(:'`') do |_instance, _cmd|
+      raise 'Unstubbed backticks detected'
     end
   end
   let(:test_instance) { TestClass.new }
