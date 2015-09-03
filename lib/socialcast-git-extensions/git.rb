@@ -39,7 +39,7 @@ module Socialcast
       end
 
       def backport_to(branch, shas)
-        run_cmd "git checkout #{base_branch}"
+        refresh_branch_from_remote base_branch
         run_cmd "git checkout -b #{branch}"
         begin
           run_cmd "git cherry-pick #{shas.join(' ')}"
