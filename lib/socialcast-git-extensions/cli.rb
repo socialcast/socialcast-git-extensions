@@ -157,7 +157,7 @@ module Socialcast
       def start(branch_name = nil)
         unless branch_name
           example_branch = %w{ cpr-3922-api-fix-invalid-auth red-212-desktop-cleanup-avatar-markup red-3212-share-form-add-edit-link }.sample
-          repo = Grit::Repo.new(Dir.pwd)
+          repo = Rugged::Repository.new(Dir.pwd)
           remote_branches = repo.remotes.collect {|b| b.name.split('/').last }
           ## Explicitly use Highline.ask
           branch_name = $terminal.ask("What would you like to name your branch? (ex: #{example_branch})") do |q|

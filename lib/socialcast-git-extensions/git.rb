@@ -1,4 +1,4 @@
-require 'grit'
+require 'rugged'
 require 'pathname'
 
 module Socialcast
@@ -21,8 +21,8 @@ module Socialcast
 
       # lookup the current branch of the PWD
       def current_branch
-        repo = Grit::Repo.new(Dir.pwd)
-        Grit::Head.current(repo).name
+        repo = Rugged::Repository.new(Dir.pwd)
+        repo.head.name.split('/').last # refs/heads/<branch-name>
       end
 
       # lookup the current repository of the PWD
