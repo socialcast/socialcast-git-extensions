@@ -75,9 +75,8 @@ module Socialcast
       end
 
       # retrieve a list of branches merged into one remote branch but not merged into another
-      def branch_difference(branch, base_branch)
-        refresh_branch_from_remote base_branch
-        branches(:remote => true, :merged => "origin/#{branch}") - branches(:remote => true, :merged => "origin/#{base_branch}")
+      def branch_difference(branch, other_branch)
+        branches(:remote => true, :merged => "origin/#{branch}") - branches(:remote => true, :merged => "origin/#{other_branch}")
       end
 
       # reset the specified branch to the same set of commits as the destination branch
@@ -92,6 +91,7 @@ module Socialcast
         say head_branch, :green
 
         run_cmd "git checkout #{base_branch}"
+        refresh_branch_from_remote head_branch
         removed_branches = branch_difference(branch, head_branch)
         run_cmd "git branch -D #{branch}" rescue nil
         run_cmd "git push origin --delete #{branch}" rescue nil

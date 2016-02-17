@@ -235,12 +235,13 @@ module Socialcast
 
       desc 'branchdiff', 'show branches merged into one remote branch but not merged into another (default = master)'
       def branchdiff(branch = nil, other_branch = 'master')
-        branch ||= ask "What remote branch would you like to compare against origin/#{other_branch}?"
+        branch ||= ask "What remote branch would you like to compare against '#{other_branch}' (ex: staging)?"
+        run_cmd "git fetch origin"
         results = branch_difference(branch, other_branch)
         if results.any?
-          say "Branches in origin/#{branch} and not in origin/#{other_branch}:\n\n\t#{results.join("\n\t")}"
+          say "\nBranches in origin/#{branch} and not in origin/#{other_branch}:\n\n#{results.join("\n")}\n\n"
         else
-          say "No branches found in origin/#{branch} that are not also in origin/#{other_branch}"
+          say "\nNo branches found in origin/#{branch} that are not also in origin/#{other_branch}\n\n"
         end
       end
 

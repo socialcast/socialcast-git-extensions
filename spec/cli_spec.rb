@@ -369,6 +369,7 @@ describe Socialcast::Gitx::CLI do
     subject(:branchdiff) { Socialcast::Gitx::CLI.start(['branchdiff'] + args) }
     let(:said_messages) { [] }
     before do
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:run_cmd).with('git fetch origin')
       allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:say) do |_instance, msg|
         said_messages << msg
       end
@@ -380,7 +381,7 @@ describe Socialcast::Gitx::CLI do
         branchdiff
       end
       it do
-        expect(said_messages).to eq ["Branches in origin/my-branch and not in origin/master:\n\n\tdummy_branch"]
+        expect(said_messages).to eq ["\nBranches in origin/my-branch and not in origin/master:\n\ndummy_branch\n\n"]
       end
     end
     context 'with two branch-name arguments' do
@@ -390,7 +391,7 @@ describe Socialcast::Gitx::CLI do
         branchdiff
       end
       it do
-        expect(said_messages).to eq ["Branches in origin/my-branch and not in origin/other-branch:\n\n\tdummy_branch"]
+        expect(said_messages).to eq ["\nBranches in origin/my-branch and not in origin/other-branch:\n\ndummy_branch\n\n"]
       end
     end
     context 'when no results are found' do
@@ -400,7 +401,7 @@ describe Socialcast::Gitx::CLI do
         branchdiff
       end
       it do
-        expect(said_messages).to eq ["No branches found in origin/my-branch that are not also in origin/master"]
+        expect(said_messages).to eq ["\nNo branches found in origin/my-branch that are not also in origin/master\n\n"]
       end
     end
   end
