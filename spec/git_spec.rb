@@ -10,6 +10,21 @@ describe Socialcast::Gitx::Git do
   let(:test_instance) { TestClass.new }
   subject { test_instance }
 
+  describe '#branch_difference' do
+    subject { test_instance.send(:branch_difference, branch, base_branch) }
+    let(:base_branch) { 'master' }
+    let(:branch) { 'my-branch' }
+    before do
+      expect(test_instance).to receive(:refresh_branch_from_remote).with(base_branch)
+      allow(test_instance).to receive(:branches) do |options|
+        expect(options[:remote]).to be_truthy
+        next %w(branch_a branch_b branch_c branch_z) if options[:merged] == "origin/#{branch}"
+        %w(branch_b branch_d branch_e branch_z) if options[:merged] == "origin/#{base_branch}"
+      end
+    end
+    it { is_expected.to eq %w(branch_a branch_c) }
+  end
+
   describe '#changelog_summary' do
     subject { test_instance.send(:changelog_summary, branch) }
     let(:base_branch) { 'master' }
