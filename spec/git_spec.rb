@@ -79,13 +79,13 @@ describe Socialcast::Gitx::Git do
           1       0       doc/images.md
         EOS
       end
-      it 'summarizes the changes by directory' do
+      it 'summarizes the changes by directory, sorting by count desc then alpha asc' do
         is_expected.to eq <<-EOS.strip_heredoc
           engines/shoelaces/spec/models (2 files)
-          lib/tasks (1 file)
-          script (1 file)
           doc (1 file)
           engines/shoelaces/app/models (1 file)
+          lib/tasks (1 file)
+          script (1 file)
           6 files changed, 35 insertions(+), 129 deletions(-)
         EOS
       end

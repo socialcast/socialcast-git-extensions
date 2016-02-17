@@ -46,6 +46,10 @@ integrate the current feature branch into an aggregate branch (ex: prototype, st
 
 Find pull requests on github including a given commit
 
+## git branchdiff <branch> <base_branch (optional, default: master)>
+
+List branches merged into remote origin/`branch` and not also merged into origin/`base_branch`
+
 ## git reviewrequest
 
 create a pull request on github for peer review of the current branch.
