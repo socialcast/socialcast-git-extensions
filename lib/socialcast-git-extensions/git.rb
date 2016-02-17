@@ -157,7 +157,7 @@ module Socialcast
           end
           dir_counts = Hash.new(0)
           dirs.each { |dir| dir_counts[dir] += 1 }
-          changes = dir_counts.to_a.sort_by { |k,v| [-v, k] }.first(5).map { |k,v| "#{k} (#{v} file#{'s' if v > 1})" }
+          changes = dir_counts.to_a.sort_by { |k, v| [-v, k] }.first(5).map { |k, v| "#{k} (#{v} file#{'s' if v > 1})" }
         else
           changes = changes.map do |line|
             added, removed, filename = line.split

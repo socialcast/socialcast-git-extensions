@@ -376,7 +376,7 @@ describe Socialcast::Gitx::CLI do
     end
     context 'with one branch-name argument' do
       let(:args) { ['my-branch'] }
-      before  do
+      before do
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branch_difference).with('my-branch', 'master').and_return(['dummy_branch'])
         branchdiff
       end
@@ -386,7 +386,7 @@ describe Socialcast::Gitx::CLI do
     end
     context 'with two branch-name arguments' do
       let(:args) { ['my-branch', 'other-branch'] }
-      before  do
+      before do
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branch_difference).with('my-branch', 'other-branch').and_return(['dummy_branch'])
         branchdiff
       end
@@ -396,7 +396,7 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when no results are found' do
       let(:args) { ['my-branch'] }
-      before  do
+      before do
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branch_difference).with('my-branch', 'master').and_return([])
         branchdiff
       end
