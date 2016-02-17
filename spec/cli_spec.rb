@@ -365,6 +365,47 @@ describe Socialcast::Gitx::CLI do
     end
   end
 
+  describe '#branchdiff' do
+    subject(:branchdiff) { Socialcast::Gitx::CLI.start(['branchdiff'] + args) }
+    let(:said_messages) { [] }
+    before do
+      expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:run_cmd).with('git fetch origin')
+      allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:say) do |_instance, msg|
+        said_messages << msg
+      end
+    end
+    context 'with one branch-name argument' do
+      let(:args) { ['my-branch'] }
+      before do
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branch_difference).with('my-branch', 'master').and_return(['dummy_branch'])
+        branchdiff
+      end
+      it do
+        expect(said_messages).to eq ["\nBranches in origin/my-branch and not in origin/master:\n\ndummy_branch\n\n"]
+      end
+    end
+    context 'with two branch-name arguments' do
+      let(:args) { ['my-branch', 'other-branch'] }
+      before do
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branch_difference).with('my-branch', 'other-branch').and_return(['dummy_branch'])
+        branchdiff
+      end
+      it do
+        expect(said_messages).to eq ["\nBranches in origin/my-branch and not in origin/other-branch:\n\ndummy_branch\n\n"]
+      end
+    end
+    context 'when no results are found' do
+      let(:args) { ['my-branch'] }
+      before do
+        expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branch_difference).with('my-branch', 'master').and_return([])
+        branchdiff
+      end
+      it do
+        expect(said_messages).to eq ["\nNo branches found in origin/my-branch that are not also in origin/master\n\n"]
+      end
+    end
+  end
+
   describe '#nuke' do
     before { allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).and_return([]) }
     context 'when target branch == staging and --destination == last_known_good_staging' do

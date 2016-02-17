@@ -10,6 +10,20 @@ describe Socialcast::Gitx::Git do
   let(:test_instance) { TestClass.new }
   subject { test_instance }
 
+  describe '#branch_difference' do
+    subject { test_instance.send(:branch_difference, branch, other_branch) }
+    let(:other_branch) { 'master' }
+    let(:branch) { 'my-branch' }
+    before do
+      allow(test_instance).to receive(:branches) do |options|
+        expect(options[:remote]).to be_truthy
+        next %w(branch_a branch_b branch_c branch_z) if options[:merged] == "origin/#{branch}"
+        %w(branch_b branch_d branch_e branch_z) if options[:merged] == "origin/#{other_branch}"
+      end
+    end
+    it { is_expected.to eq %w(branch_a branch_c) }
+  end
+
   describe '#changelog_summary' do
     subject { test_instance.send(:changelog_summary, branch) }
     let(:base_branch) { 'master' }
@@ -64,13 +78,13 @@ describe Socialcast::Gitx::Git do
           1       0       doc/images.md
         EOS
       end
-      it 'summarizes the changes by directory' do
+      it 'summarizes the changes by directory, sorting by count desc then alpha asc' do
         is_expected.to eq <<-EOS.strip_heredoc
           engines/shoelaces/spec/models (2 files)
-          lib/tasks (1 file)
-          script (1 file)
           doc (1 file)
           engines/shoelaces/app/models (1 file)
+          lib/tasks (1 file)
+          script (1 file)
           6 files changed, 35 insertions(+), 129 deletions(-)
         EOS
       end
