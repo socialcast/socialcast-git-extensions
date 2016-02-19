@@ -50,9 +50,17 @@ Find pull requests on github including a given commit
 
 List branches merged into remote origin/`branch` and not also merged into origin/`base_branch`
 
+## git createpr
+
+create a pull request on github for the current branch, without assigning it for review.
+
 ## git reviewrequest
 
-create a pull request on github for peer review of the current branch.
+create and assign a pull request on github for peer review of the current branch.  See `assignpr` for additional options.
+
+## git assignpr
+
+assign the pull request on github for the current branch for peer review.
 
 ### Optional:
 Specify a Review Buddy mapping that will reference the local Github username and @mention a pre-assigned review buddy in the Socialcast Review Request message.  Specify the mapping by creating a .scgitx YML file relative to the Repo Root: config/scgitx.yml with the following format:
