@@ -75,7 +75,8 @@ module Socialcast
         issue_url = current_pr['issue_url']
         url = current_pr['html_url']
 
-        assign_pull_request(assignee, issue_url) if assignee = github_review_buddy(current_user)
+        assignee = github_review_buddy(current_user)
+        assign_pull_request(assignee, issue_url) if assignee
 
         issue_message = ['#reviewrequest', primary_mention, secondary_mention, "\n/cc @#{developer_group} #scgitx"].compact.join(' ')
         comment_on_issue(issue_url, issue_message)
