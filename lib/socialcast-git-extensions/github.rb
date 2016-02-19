@@ -67,13 +67,9 @@ module Socialcast
         prs.first
       end
 
-      # returns the issue_url for the PR
-      def assign_pull_request(branch, repo, assignee)
+      def assign_pull_request(assignee, issue_url)
         issue_payload = { :title => branch, :assignee => assignee }.to_json
-        issue_url = current_pr_for_branch(repo, branch)['issue_url']
-        raise "Unable to determine issue_url for branch #{branch} in #{repo}" unless issue_url
         github_api_request "PATCH", issue_url, issue_payload
-        issue_url
       rescue => e
         say "Failed to assign pull request: #{e.message}", :red
       end
