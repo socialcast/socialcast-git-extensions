@@ -330,7 +330,7 @@ module Socialcast
       # post a message in socialcast
       # skip sharing message if CLI quiet option is present or config quiet option is 'true'
       def post(message, params = {})
-        return if (options[:quiet] || config['quiet'] == 'true') && !options[:force_post]
+        return if (options[:quiet] || config['quiet'] == true) && !options[:force_post]
         ActiveResource::Base.logger = Logger.new(STDOUT) if options[:trace]
         Socialcast::CommandLine::Message.configure_from_credentials
         response = Socialcast::CommandLine::Message.create params.merge(:body => message)
