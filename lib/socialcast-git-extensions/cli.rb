@@ -32,8 +32,7 @@ module Socialcast
       method_option :description, :type => :string, :aliases => '-d', :desc => 'pull request description'
       # @see http://developer.github.com/v3/pulls/
       def createpr
-        update
-
+        update unless @skip_update
         description = options[:description] || editor_input(PULL_REQUEST_DESCRIPTION)
         branch = current_branch
         repo = current_repo
@@ -46,6 +45,8 @@ module Socialcast
       method_option :skip_additional_reviewers, :type => :string, :aliases => '-s', :desc => 'Skips adding additional reviewers'
       # @see http://developer.github.com/v3/pulls/
       def assignpr(*additional_reviewers)
+        update unless @skip_update
+
         primary_mention = if buddy = socialcast_review_buddy(current_user)
           "assigned to @#{buddy}"
         end
@@ -89,6 +90,8 @@ module Socialcast
       method_option :skip_additional_reviewers, :type => :string, :aliases => '-s', :desc => 'Skips adding additional reviewers'
       # @see http://developer.github.com/v3/pulls/
       def reviewrequest(*additional_reviewers)
+        update
+        @skip_update = true
         createpr
         assignpr(*additional_reviewers)
       end
