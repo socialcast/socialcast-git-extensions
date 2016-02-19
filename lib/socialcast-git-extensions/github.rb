@@ -56,7 +56,8 @@ module Socialcast
       def pull_requests_for_branch(repo, branch, options = {})
         query = "base=#{branch}"
         query = "#{query}&state=#{options[:state]}" if options[:state]
-        github_api_request "GET", "repos/#{repo}/pulls?base=#{branch}"
+        head_name = "#{repo.split('/').first}:#{branch}"
+        github_api_request "GET", "repos/#{repo}/pulls?head=#{head_name}"
       end
 
       # find the current PR for a given branch
