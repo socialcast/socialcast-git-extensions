@@ -68,7 +68,7 @@ module Socialcast
       end
 
       def assign_pull_request(assignee, issue_url)
-        issue_payload = { :title => branch, :assignee => assignee }.to_json
+        issue_payload = { :assignee => assignee }.to_json
         github_api_request "PATCH", issue_url, issue_payload
       rescue => e
         say "Failed to assign pull request: #{e.message}", :red
