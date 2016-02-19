@@ -25,12 +25,10 @@ describe Socialcast::Gitx::CLI do
   end
 
   describe '#update' do
-    before do
+    it do
       expect_any_instance_of(Socialcast::Gitx::CLI).not_to receive(:post)
       Socialcast::Gitx::CLI.start ['update']
-    end
-    it 'should not post message to socialcast' do end # see expectations
-    it 'should run expected commands' do
+
       expect(stubbed_executed_commands).to eq([
         'git pull origin FOO',
         'git pull origin master',
@@ -40,107 +38,135 @@ describe Socialcast::Gitx::CLI do
   end
 
   describe '#integrate' do
-    context 'when target branch is ommitted' do
+    context 'with no existing pull request' do
       before do
-        stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
-
-        Socialcast::Gitx::CLI.start ['integrate']
+        stub_request(:get, "https://api.github.com/repos/FOO/pulls?base=branch")
+          .with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token faketoken', 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'})
+          .to_return(:status => 200, :body => "[]", :headers => {})
       end
-      it 'should post message to socialcast' do end # see expectations
-      it 'should default to prototype' do
-        expect(stubbed_executed_commands).to eq([
-          "git pull origin FOO",
-          "git pull origin master",
-          "git push origin HEAD",
-          "git branch -D prototype",
-          "git fetch origin",
-          "git checkout prototype",
-          "git pull . FOO",
-          "git push origin HEAD",
-          "git checkout FOO",
-          "git checkout FOO"
-        ])
+      context 'when target branch is omitted' do
+        it 'defaults to prototype' do
+          stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
+
+          Socialcast::Gitx::CLI.start ['integrate']
+
+          expect(stubbed_executed_commands).to eq([
+                                                    "git pull origin FOO",
+                                                    "git pull origin master",
+                                                    "git push origin HEAD",
+                                                    "git branch -D prototype",
+                                                    "git fetch origin",
+                                                    "git checkout prototype",
+                                                    "git pull . FOO",
+                                                    "git push origin HEAD",
+                                                    "git checkout FOO",
+                                                    "git checkout FOO"
+                                                  ])
+        end
+      end
+      context 'when target branch is omitted with custom prototype branch' do
+        it 'defaults to the custom prototype branch' do
+          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:prototype_branch).and_return('special-prototype')
+
+          stub_message "#worklog integrating FOO into special-prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
+
+          Socialcast::Gitx::CLI.start ['integrate']
+
+          expect(stubbed_executed_commands).to eq([
+                                                    "git pull origin FOO",
+                                                    "git pull origin master",
+                                                    "git push origin HEAD",
+                                                    "git branch -D special-prototype",
+                                                    "git fetch origin",
+                                                    "git checkout special-prototype",
+                                                    "git pull . FOO",
+                                                    "git push origin HEAD",
+                                                    "git checkout FOO",
+                                                    "git checkout FOO"
+                                                  ])
+        end
+      end
+      context 'when target branch == prototype' do
+        it do
+          stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
+
+          Socialcast::Gitx::CLI.start ['integrate', 'prototype']
+
+          expect(stubbed_executed_commands).to eq([
+                                                    "git pull origin FOO",
+                                                    "git pull origin master",
+                                                    "git push origin HEAD",
+                                                    "git branch -D prototype",
+                                                    "git fetch origin",
+                                                    "git checkout prototype",
+                                                    "git pull . FOO",
+                                                    "git push origin HEAD",
+                                                    "git checkout FOO",
+                                                    "git checkout FOO"
+                                                  ])
+        end
+      end
+      context 'when target branch == staging' do
+        it do
+          stub_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
+
+          Socialcast::Gitx::CLI.start ['integrate', 'staging']
+
+          expect(stubbed_executed_commands).to eq([
+                                                    "git pull origin FOO",
+                                                    "git pull origin master",
+                                                    "git push origin HEAD",
+                                                    "git branch -D staging",
+                                                    "git fetch origin",
+                                                    "git checkout staging",
+                                                    "git pull . FOO",
+                                                    "git push origin HEAD",
+                                                    "git checkout FOO",
+                                                    "git branch -D prototype",
+                                                    "git fetch origin",
+                                                    "git checkout prototype",
+                                                    "git pull . staging",
+                                                    "git push origin HEAD",
+                                                    "git checkout staging",
+                                                    "git checkout FOO"
+                                                  ])
+        end
+      end
+      context 'when target branch != staging || prototype' do
+        it do
+          expect {
+            Socialcast::Gitx::CLI.start ['integrate', 'asdfasdfasdf']
+          }.to raise_error(/Only aggregate branches are allowed for integration/)
+        end
       end
     end
-    context 'when target branch is ommitted with custom prototype branch' do
+    context 'with an existing pull request' do
       before do
-        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:prototype_branch).and_return('special-prototype')
+        stub_request(:get, "https://api.github.com/repos/FOO/pulls?base=branch")
+          .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]))
+      end
+      it 'comments on the PR and does not force a post' do
+        stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => false
 
-        stub_message "#worklog integrating FOO into special-prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
+        stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
+          .with(
+            :body => "{\"body\":\"Integrated into prototype /cc @SocialcastDevelopers #scgitx\"}",
+          ).to_return(:status => 200, :body => "{}", :headers => {})
 
-        Socialcast::Gitx::CLI.start ['integrate']
-      end
-      it 'should post message to socialcast' do end # see expectations
-      it 'should default to prototype' do
-        expect(stubbed_executed_commands).to eq([
-          "git pull origin FOO",
-          "git pull origin master",
-          "git push origin HEAD",
-          "git branch -D special-prototype",
-          "git fetch origin",
-          "git checkout special-prototype",
-          "git pull . FOO",
-          "git push origin HEAD",
-          "git checkout FOO",
-          "git checkout FOO"
-        ])
-      end
-    end
-    context 'when target branch == prototype' do
-      before do
-        stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
+          Socialcast::Gitx::CLI.start ['integrate']
 
-        Socialcast::Gitx::CLI.start ['integrate', 'prototype']
-      end
-      it 'should post message to socialcast' do end # see expectations
-      it 'should run expected commands' do
-        expect(stubbed_executed_commands).to eq([
-          "git pull origin FOO",
-          "git pull origin master",
-          "git push origin HEAD",
-          "git branch -D prototype",
-          "git fetch origin",
-          "git checkout prototype",
-          "git pull . FOO",
-          "git push origin HEAD",
-          "git checkout FOO",
-          "git checkout FOO"
-        ])
-      end
-    end
-    context 'when target branch == staging' do
-      before do
-        stub_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
-
-        Socialcast::Gitx::CLI.start ['integrate', 'staging']
-      end
-      it 'should post message to socialcast' do end # see expectations
-      it 'should also integrate into prototype and run expected commands' do
-        expect(stubbed_executed_commands).to eq([
-          "git pull origin FOO",
-          "git pull origin master",
-          "git push origin HEAD",
-          "git branch -D staging",
-          "git fetch origin",
-          "git checkout staging",
-          "git pull . FOO",
-          "git push origin HEAD",
-          "git checkout FOO",
-          "git branch -D prototype",
-          "git fetch origin",
-          "git checkout prototype",
-          "git pull . staging",
-          "git push origin HEAD",
-          "git checkout staging",
-          "git checkout FOO"
-        ])
-      end
-    end
-    context 'when target branch != staging || prototype' do
-      it 'should raise an error' do
-        expect {
-          Socialcast::Gitx::CLI.start ['integrate', 'asdfasdfasdf']
-        }.to raise_error(/Only aggregate branches are allowed for integration/)
+          expect(stubbed_executed_commands).to eq([
+                                                    "git pull origin FOO",
+                                                    "git pull origin master",
+                                                    "git push origin HEAD",
+                                                    "git branch -D prototype",
+                                                    "git fetch origin",
+                                                    "git checkout prototype",
+                                                    "git pull . FOO",
+                                                    "git push origin HEAD",
+                                                    "git checkout FOO",
+                                                    "git checkout FOO"
+                                                  ])
       end
     end
   end
@@ -162,15 +188,13 @@ describe Socialcast::Gitx::CLI do
       end
     end
     context 'when user confirms release' do
-      before do
+      it do
         stub_message "#worklog releasing FOO to master in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
 
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
-      end
-      it 'should post message to socialcast' do end # see expectations
-      it 'should run expected commands' do
+
         expect(stubbed_executed_commands).to eq([
           "git branch -D last_known_good_staging",
           "git fetch origin",
@@ -248,19 +272,16 @@ describe Socialcast::Gitx::CLI do
     end
 
     context 'with alternative base branch via config file' do
-      before do
+      it do
         stub_message "#worklog releasing FOO to special-master in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
 
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
         allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return( { 'base_branch' => 'special-master' })
         expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:cleanup)
         Socialcast::Gitx::CLI.start ['release']
-      end
-      it 'should post message to socialcast' do end # see expectations
-      it "treats the alternative base branch as reserved" do
+
         expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'special-master'
-      end
-      it 'should run expected commands' do
+
         expect(stubbed_executed_commands).to eq([
           "git branch -D last_known_good_staging",
           "git fetch origin",
@@ -296,11 +317,9 @@ describe Socialcast::Gitx::CLI do
       after do
         ENV.delete('BASE_BRANCH')
       end
-      it "treats the alternative base branch as reserved" do
+      it do
         expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'special-master'
-      end
-      it 'should post message to socialcast' do end # see expectations
-      it 'should run expected commands' do
+
         expect(stubbed_executed_commands).to eq([
           "git branch -D last_known_good_staging",
           "git fetch origin",
@@ -339,9 +358,7 @@ describe Socialcast::Gitx::CLI do
       it "treats the alternative base branch as reserved" do
         expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'special-master'
         expect(Socialcast::Gitx::CLI.new.send(:reserved_branches)).to include 'extra-special-master'
-      end
-      it 'should post message to socialcast' do end # see expectations
-      it 'should run expected commands' do
+
         expect(stubbed_executed_commands).to eq([
           "git branch -D last_known_good_staging",
           "git fetch origin",
@@ -1145,7 +1162,11 @@ describe Socialcast::Gitx::CLI do
 
   describe '#promote' do
     before do
-      stub_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
+      stub_request(:get, "https://api.github.com/repos/FOO/pulls?base=branch")
+        .with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token faketoken', 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'})
+        .to_return(:status => 200, :body => "[]", :headers => {})
+
+      stub_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
       Socialcast::Gitx::CLI.start ['promote']
     end
     it 'should integrate into staging' do

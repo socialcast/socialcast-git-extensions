@@ -223,12 +223,26 @@ module Socialcast
         integrate_branch(target_branch, prototype_branch) if target_branch == staging_branch
         run_cmd "git checkout #{branch}"
 
+        current_pr = begin
+          current_pr_for_branch(current_repo, current_branch)
+        rescue => e
+          say e.message.to_s
+          nil
+        end
+
+        say("WARNING: Unable to find current pull request.  Use `git createpr` to create one.", :red) unless current_pr
+
+        if current_pr && !options[:quiet]
+          issue_message = "Integrated into #{target_branch} /cc @#{developer_group} #scgitx"
+          comment_on_issue(current_pr['issue_url'], issue_message)
+        end
+
         message = <<-EOS.strip_heredoc
           #worklog integrating #{branch} into #{target_branch} in #{current_repo} #scgitx
           /cc @#{developer_group}
         EOS
 
-        post message.strip
+        post message.strip, :force_post => (!current_pr && !options[:quiet])
       end
 
       desc 'promote', '(DEPRECATED) promote the current branch into staging'
@@ -316,7 +330,7 @@ module Socialcast
       # post a message in socialcast
       # skip sharing message if CLI quiet option is present or config quiet option is 'true'
       def post(message, params = {})
-        return if options[:quiet] || config['quiet'] == 'true'
+        return if (options[:quiet] || config['quiet'] == 'true') && !options[:force_post]
         ActiveResource::Base.logger = Logger.new(STDOUT) if options[:trace]
         Socialcast::CommandLine::Message.configure_from_credentials
         response = Socialcast::CommandLine::Message.create params.merge(:body => message)
