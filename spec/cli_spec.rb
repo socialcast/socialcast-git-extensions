@@ -150,7 +150,7 @@ describe Socialcast::Gitx::CLI do
 
         stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
           .with(
-            :body => "{\"body\":\"Integrated into prototype /cc @SocialcastDevelopers #scgitx\"}",
+            :body => "{\"body\":\"Integrated into prototype\"}",
           ).to_return(:status => 200, :body => "{}", :headers => {})
 
           Socialcast::Gitx::CLI.start ['integrate']

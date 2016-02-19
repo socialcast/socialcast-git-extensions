@@ -234,7 +234,7 @@ module Socialcast
         say("WARNING: Unable to find current pull request.  Use `git createpr` to create one.", :red) unless current_pr
 
         if current_pr && !options[:quiet]
-          issue_message = "Integrated into #{target_branch} /cc @#{developer_group} #scgitx"
+          issue_message = "Integrated into #{target_branch}"
           comment_on_issue(current_pr['issue_url'], issue_message)
         end
 
