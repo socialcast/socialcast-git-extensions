@@ -31,9 +31,8 @@ module Socialcast
         throw e
       end
 
-      # returns the url of the created pull request
       # @see http://developer.github.com/v3/pulls/
-      def create_pull_request(branch, repo, body, assignee)
+      def create_pull_request(branch, repo, body)
         payload = {:title => branch, :base => base_branch, :head => branch, :body => body}.to_json
         say "Creating pull request for "
         say "#{branch} ", :green
@@ -41,11 +40,7 @@ module Socialcast
         say "#{base_branch} ", :green
         say "in "
         say repo, :green
-        data = github_api_request("POST", "repos/#{repo}/pulls", payload)
-        assign_pull_request(branch, assignee, data) if assignee ## Unfortunately this needs to be done in a seperate request.
-
-        url = data['html_url']
-        url
+        github_api_request("POST", "repos/#{repo}/pulls", payload)
       end
 
       # find the PRs matching the given commit hash
@@ -56,12 +51,39 @@ module Socialcast
         github_api_request "GET", "search/issues?q=#{query}"
       end
 
-      def assign_pull_request(branch, assignee, data)
+      # find the PRs for a given branch
+      # https://developer.github.com/v3/pulls/#list-pull-requests
+      def pull_requests_for_branch(branch, repo, options = {})
+        query = "base=#{branch}"
+        query = "#{query}&state=#{options[:state]}" if options[:state]
+        github_api_request "GET", "repos/#{repo}/pulls?base=branch"
+      end
+
+      # find the current PR for a given branch
+      def current_pr_for_branch(repo, branch)
+        prs = pull_requests_for_branch(repo, branch)
+        raise "Multiple (#{prs.size}) open PRs for #{branch} found in #{repo}, unable to proceed" if prs.size > 1
+        prs.first
+      end
+
+      # returns the issue_url for the PR
+      def assign_pull_request(branch, repo, assignee)
         issue_payload = { :title => branch, :assignee => assignee }.to_json
-        github_api_request "PATCH", data['issue_url'], issue_payload
+        issue_url = current_pr_for_branch(repo, branch)['issue_url']
+        raise "Unable to determine issue_url for branch #{branch} in #{repo}" unless issue_url
+        github_api_request "PATCH", issue_url, issue_payload
+        issue_url
       rescue => e
         say "Failed to assign pull request: #{e.message}", :red
       end
+
+      # post a comment on an issue
+      # https://developer.github.com/v3/issues/comments/#create-a-comment
+      def comment_on_issue(issue_url, comment_body)
+        github_api_request 'POST', "#{issue_url}/comments", { :body => comment_body }.to_json
+      end
+
+      # https://developer.github.com/v3/issues/comments/#create-a-comment
 
       # @returns [String] socialcast username to assign the review to
       # @returns [nil] when no buddy system configured or user not found

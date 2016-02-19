@@ -4,7 +4,7 @@ require 'bundler/setup'
 require 'rspec/mocks'
 require 'webmock/rspec'
 require 'pry'
-
+require 'byebug'
 require 'socialcast-git-extensions/cli'
 
 ENV['SCGITX_TEST'] = 'true'

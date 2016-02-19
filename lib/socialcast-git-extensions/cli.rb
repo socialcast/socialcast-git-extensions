@@ -28,14 +28,24 @@ module Socialcast
         RestClient.log = Logger.new(STDOUT) if options[:trace]
       end
 
-      desc "reviewrequest", "Create a pull request on github"
+      desc "createpr", "Create a pull request on github"
       method_option :description, :type => :string, :aliases => '-d', :desc => 'pull request description'
+      # @see http://developer.github.com/v3/pulls/
+      def createpr
+        update
+
+        description = options[:description] || editor_input(PULL_REQUEST_DESCRIPTION)
+        branch = current_branch
+        repo = current_repo
+        url = create_pull_request(branch, repo, description)['html_url']
+        say "Pull request created: #{url}"
+      end
+
+      desc "assignpr", "Assign the pull request on github for review"
       method_option :additional_reviewers, :type => :string, :aliases => '-a', :desc => 'add additional reviewers to mention automatically, and skips the prompt'
       method_option :skip_additional_reviewers, :type => :string, :aliases => '-s', :desc => 'Skips adding additional reviewers'
       # @see http://developer.github.com/v3/pulls/
-      def reviewrequest(*additional_reviewers)
-        update
-
+      def assignpr(*additional_reviewers)
         primary_mention = if buddy = socialcast_review_buddy(current_user)
           "assigned to @#{buddy}"
         end
@@ -58,16 +68,29 @@ module Socialcast
           end
         end
 
-        assignee = github_review_buddy(current_user)
-
-        description = options[:description] || editor_input(PULL_REQUEST_DESCRIPTION)
         branch = current_branch
         repo = current_repo
-        url = create_pull_request branch, repo, description, assignee
-        say "Pull request created: #{url}"
+        current_pr = current_pr_for_branch(repo, branch)
+        issue_url = current_pr['issue_url']
+        url = current_pr['html_url']
 
-        review_message = ["#reviewrequest for #{branch} in #{current_repo}", "PR #{url} #{primary_mention}", '', description, '', secondary_mention, "/cc @#{developer_group} #scgitx", '', changelog_summary(branch)].compact.join("\n").gsub(/\n{2,}/, "\n\n")
+        assign_pull_request(assignee, issue_url) if assignee = github_review_buddy(current_user)
+
+        issue_message = ['#reviewrequest', primary_mention, secondary_mention, "\n/cc @#{developer_group} #scgitx"].compact.join(' ')
+        comment_on_issue(issue_url, issue_message)
+
+        review_message = ["#reviewrequest for #{branch} in #{current_repo}", "PR #{url} #{primary_mention}", '', current_pr['body'], '', secondary_mention, "/cc @#{developer_group} #scgitx", '', changelog_summary(branch)].compact.join("\n").gsub(/\n{2,}/, "\n\n")
         post review_message, :message_type => 'review_request'
+      end
+
+      desc "reviewrequest", "Create and assign a pull request on github"
+      method_option :description, :type => :string, :aliases => '-d', :desc => 'pull request description'
+      method_option :additional_reviewers, :type => :string, :aliases => '-a', :desc => 'add additional reviewers to mention automatically, and skips the prompt'
+      method_option :skip_additional_reviewers, :type => :string, :aliases => '-s', :desc => 'Skips adding additional reviewers'
+      # @see http://developer.github.com/v3/pulls/
+      def reviewrequest(*additional_reviewers)
+        createpr
+        assignpr(*additional_reviewers)
       end
 
       desc "findpr", "Find pull requests including a given commit"
@@ -104,14 +127,19 @@ module Socialcast
         maintenance_branch_url = "https://github.com/#{repo}/tree/#{maintenance_branch}"
         description = "Backport ##{pull_request_num} to #{maintenance_branch_url}\n***\n#{pull_request_data['body']}"
 
-        pull_request_url = create_pull_request(backport_branch, repo, description, assignee)
+        pr_hash = create_pull_request(backport_branch, repo, description)
+        assign_pull_request(assignee, pr_hash['issue_url']) if assignee
+
+        reviewer_mention = "@#{socialcast_reviwer}" if socialcast_reviewer
+        issue_message = ['#reviewrequest backport', reviewer_mention, "/cc @#{developer_group} #scgitx"].compact.join(' ')
+        comment_on_issue(pr_hash['issue_url'], issue_message)
 
         review_message = ["#reviewrequest backport ##{pull_request_num} to #{maintenance_branch} in #{current_repo} #scgitx"]
         if socialcast_reviewer
-          review_message << "/cc @#{socialcast_reviewer} for #backport track"
+          review_message << "/cc #{reviewer_mention} for #backport track"
         end
         review_message << "/cc @#{developer_group}"
-        post review_message.join("\n\n"), :url => pull_request_url, :message_type => 'review_request'
+        post review_message.join("\n\n"), :url => pr_hash['html_url'], :message_type => 'review_request'
       ensure
         ENV['BASE_BRANCH'] = original_base_branch
       end
@@ -283,9 +311,9 @@ module Socialcast
       end
 
       # post a message in socialcast
-      # skip sharing message if CLI quiet option is present
+      # skip sharing message if CLI quiet option is present or config quiet option is 'true'
       def post(message, params = {})
-        return if options[:quiet]
+        return if options[:quiet] || config['quiet'] == 'true'
         ActiveResource::Base.logger = Logger.new(STDOUT) if options[:trace]
         Socialcast::CommandLine::Message.configure_from_credentials
         response = Socialcast::CommandLine::Message.create params.merge(:body => message)

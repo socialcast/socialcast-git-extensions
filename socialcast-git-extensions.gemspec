@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec', '~> 3.0'
   s.add_development_dependency 'pry', '~>  0.9.12.6'
   s.add_development_dependency 'webmock', '~> 1.21'
+  s.add_development_dependency 'byebug'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
