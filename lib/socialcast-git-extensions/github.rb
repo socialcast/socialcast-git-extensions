@@ -53,9 +53,7 @@ module Socialcast
 
       # find the PRs for a given branch
       # https://developer.github.com/v3/pulls/#list-pull-requests
-      def pull_requests_for_branch(repo, branch, options = {})
-        query = "base=#{branch}"
-        query = "#{query}&state=#{options[:state]}" if options[:state]
+      def pull_requests_for_branch(repo, branch)
         head_name = "#{repo.split('/').first}:#{branch}"
         github_api_request "GET", "repos/#{repo}/pulls?head=#{head_name}"
       end
