@@ -78,8 +78,6 @@ module Socialcast
         github_api_request 'POST', "#{issue_url}/comments", { :body => comment_body }.to_json
       end
 
-      # https://developer.github.com/v3/issues/comments/#create-a-comment
-
       # @returns [String] socialcast username to assign the review to
       # @returns [nil] when no buddy system configured or user not found
       def socialcast_review_buddy(current_user)

@@ -1366,7 +1366,7 @@ describe Socialcast::Gitx::CLI do
       expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:branches).with(:merged => true).and_return(['staging', 'bazquux', 'last_known_good_prototype'])
       Socialcast::Gitx::CLI.start ['cleanup']
     end
-    it 'should only cleanup non-reserved branches' do
+    it 'only cleans up non-reserved branches' do
       expect(stubbed_executed_commands).to eq([
         "git checkout master",
         "git pull",
