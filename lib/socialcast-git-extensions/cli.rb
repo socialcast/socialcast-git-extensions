@@ -78,11 +78,13 @@ module Socialcast
         assignee = github_review_buddy(current_user)
         assign_pull_request(assignee, issue_url) if assignee
 
-        issue_message = ['#reviewrequest', primary_mention, secondary_mention, "\n/cc @#{developer_group} #scgitx"].compact.join(' ')
-        comment_on_issue(issue_url, issue_message)
-
-        review_message = ["#reviewrequest for #{branch} in #{current_repo}", "PR #{url} #{primary_mention}", '', current_pr['body'], '', secondary_mention, "/cc @#{developer_group} #scgitx", '', changelog_summary(branch)].compact.join("\n").gsub(/\n{2,}/, "\n\n")
-        post review_message, :message_type => 'review_request'
+        if use_pr_comments?
+          issue_message = ['#reviewrequest', primary_mention, secondary_mention, "\n/cc @#{developer_group} #scgitx"].compact.join(' ')
+          comment_on_issue(issue_url, issue_message)
+        else
+          review_message = ["#reviewrequest for #{branch} in #{current_repo}", "PR #{url} #{primary_mention}", '', current_pr['body'], '', secondary_mention, "/cc @#{developer_group} #scgitx", '', changelog_summary(branch)].compact.join("\n").gsub(/\n{2,}/, "\n\n")
+          post review_message, :message_type => 'review_request'
+        end
       end
 
       desc "reviewrequest", "Create and assign a pull request on github"
@@ -135,15 +137,17 @@ module Socialcast
         assign_pull_request(assignee, pr_hash['issue_url']) if assignee
 
         reviewer_mention = "@#{socialcast_reviwer}" if socialcast_reviewer
-        issue_message = ['#reviewrequest backport', reviewer_mention, "/cc @#{developer_group} #scgitx"].compact.join(' ')
-        comment_on_issue(pr_hash['issue_url'], issue_message)
-
-        review_message = ["#reviewrequest backport ##{pull_request_num} to #{maintenance_branch} in #{current_repo} #scgitx"]
-        if socialcast_reviewer
-          review_message << "/cc #{reviewer_mention} for #backport track"
+        if use_pr_comments?
+          issue_message = ['#reviewrequest backport', reviewer_mention, "/cc @#{developer_group} #scgitx"].compact.join(' ')
+          comment_on_issue(pr_hash['issue_url'], issue_message)
+        else
+          review_message = ["#reviewrequest backport ##{pull_request_num} to #{maintenance_branch} in #{current_repo} #scgitx"]
+          if socialcast_reviewer
+            review_message << "/cc #{reviewer_mention} for #backport track"
+          end
+          review_message << "/cc @#{developer_group}"
+          post review_message.join("\n\n"), :url => pr_hash['html_url'], :message_type => 'review_request'
         end
-        review_message << "/cc @#{developer_group}"
-        post review_message.join("\n\n"), :url => pr_hash['html_url'], :message_type => 'review_request'
       ensure
         ENV['BASE_BRANCH'] = original_base_branch
       end
@@ -233,17 +237,17 @@ module Socialcast
 
         say("WARNING: Unable to find current pull request.  Use `git createpr` to create one.", :red) unless current_pr
 
-        if current_pr && !options[:quiet]
+        if use_pr_comments? && current_pr
           issue_message = "Integrated into #{target_branch}"
-          comment_on_issue(current_pr['issue_url'], issue_message)
+          comment_on_issue(current_pr['issue_url'], issue_message) unless options[:quiet]
+        else
+          message = <<-EOS.strip_heredoc
+            #worklog integrating #{branch} into #{target_branch} in #{current_repo} #scgitx
+            /cc @#{developer_group}
+          EOS
+
+          post message.strip
         end
-
-        message = <<-EOS.strip_heredoc
-          #worklog integrating #{branch} into #{target_branch} in #{current_repo} #scgitx
-          /cc @#{developer_group}
-        EOS
-
-        post message.strip, :force_post => (!current_pr && !options[:quiet])
       end
 
       desc 'promote', '(DEPRECATED) promote the current branch into staging'
@@ -328,10 +332,14 @@ module Socialcast
         !!config['enforce_staging_before_release']
       end
 
+      def use_pr_comments?
+        config['comment_via_pull_request'] == true
+      end
+
       # post a message in socialcast
       # skip sharing message if CLI quiet option is present or config quiet option is 'true'
       def post(message, params = {})
-        return if (options[:quiet] || config['quiet'] == true) && !options[:force_post]
+        return if options[:quiet]
         ActiveResource::Base.logger = Logger.new(STDOUT) if options[:trace]
         Socialcast::CommandLine::Message.configure_from_credentials
         response = Socialcast::CommandLine::Message.create params.merge(:body => message)

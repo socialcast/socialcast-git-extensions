@@ -41,12 +41,11 @@ describe Socialcast::Gitx::CLI do
     context 'with no existing pull request' do
       before do
         stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
-          .with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token faketoken', 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'})
           .to_return(:status => 200, :body => "[]", :headers => {})
       end
       context 'when target branch is omitted' do
         it 'defaults to prototype' do
-          stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
+          stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
 
           Socialcast::Gitx::CLI.start ['integrate']
 
@@ -68,7 +67,7 @@ describe Socialcast::Gitx::CLI do
         it 'defaults to the custom prototype branch' do
           allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:prototype_branch).and_return('special-prototype')
 
-          stub_message "#worklog integrating FOO into special-prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
+          stub_message "#worklog integrating FOO into special-prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
 
           Socialcast::Gitx::CLI.start ['integrate']
 
@@ -88,7 +87,7 @@ describe Socialcast::Gitx::CLI do
       end
       context 'when target branch == prototype' do
         it do
-          stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
+          stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
 
           Socialcast::Gitx::CLI.start ['integrate', 'prototype']
 
@@ -108,7 +107,7 @@ describe Socialcast::Gitx::CLI do
       end
       context 'when target branch == staging' do
         it do
-          stub_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
+          stub_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
 
           Socialcast::Gitx::CLI.start ['integrate', 'staging']
 
@@ -146,12 +145,11 @@ describe Socialcast::Gitx::CLI do
           .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]))
       end
       it 'comments on the PR and does not force a post' do
-        stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => false
+        stub_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
 
         stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
-          .with(
-            :body => "{\"body\":\"Integrated into prototype\"}",
-          ).to_return(:status => 200, :body => "{}", :headers => {})
+          .with(:body => "{\"body\":\"Integrated into prototype\"}")
+          .to_return(:status => 200, :body => "{}", :headers => {})
 
           Socialcast::Gitx::CLI.start ['integrate']
 
@@ -883,28 +881,21 @@ describe Socialcast::Gitx::CLI do
         }
       ]
 
-      stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59").
-        with(:headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent' => 'socialcast-git-extensions' }).
-        to_return(:status => 200, :body => pr_response.to_json, :headers => {})
-      stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/commits").
-        with(:headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent' => 'socialcast-git-extensions' }).
-        to_return(:status => 200, :body => commits_response.to_json, :headers => {})
-      stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-         with(:body => "{\"title\":\"backport_59_to_v1.x\",\"base\":\"v1.x\",\"head\":\"backport_59_to_v1.x\",\"body\":\"Backport #59 to https://github.com/socialcast/socialcast-git-extensions/tree/v1.x\\n***\\nsimply testing this out\"}",
-              :headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent'=>'socialcast-git-extensions' }).
-         to_return(:status => 200, :body => '{"html_url": "https://github.com/socialcast/socialcast-git-extensions/pulls/60", "issue_url": "https://api.github.com/repos/repo/project/issues/60"}', :headers => { 'Content-Type' => 'application/json' })
+      stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59")
+        .to_return(:status => 200, :body => pr_response.to_json, :headers => {})
+      stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/commits")
+        .to_return(:status => 200, :body => commits_response.to_json, :headers => {})
+      stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls")
+        .with(:body => "{\"title\":\"backport_59_to_v1.x\",\"base\":\"v1.x\",\"head\":\"backport_59_to_v1.x\",\"body\":\"Backport #59 to https://github.com/socialcast/socialcast-git-extensions/tree/v1.x\\n***\\nsimply testing this out\"}")
+        .to_return(:status => 200, :body => '{"html_url": "https://github.com/socialcast/socialcast-git-extensions/pulls/60", "issue_url": "https://api.github.com/repos/repo/project/issues/60"}', :headers => { 'Content-Type' => 'application/json' })
 
       stub_request(:post, "https://api.github.com/repos/repo/project/issues/60/comments")
-        .with(
-          :body => "{\"body\":\"#reviewrequest backport /cc @SocialcastDevelopers #scgitx\"}",
-          :headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token faketoken', 'Content-Length'=>'68', 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'}
-        ).to_return(:status => 200, :body => "{}", :headers => {})
+        .with(:body => "{\"body\":\"#reviewrequest backport /cc @SocialcastDevelopers #scgitx\"}")
+        .to_return(:status => 200, :body => "{}", :headers => {})
 
       stub_request(:post, "https://testuser:testpassword@testdomain/api/messages.json")
-        .with(
-          :body => "{\"message\":{\"url\":\"https://github.com/socialcast/socialcast-git-extensions/pulls/60\",\"message_type\":\"review_request\",\"body\":\"#reviewrequest backport #59 to v1.x in socialcast/socialcast-git-extensions #scgitx\\n\\n/cc @SocialcastDevelopers\"}}",
-          :headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Content-Type'=>'application/json', 'User-Agent'=>'Ruby'}
-        ).to_return(:status => 200, :body => "", :headers => {})
+        .with(:body => "{\"message\":{\"url\":\"https://github.com/socialcast/socialcast-git-extensions/pulls/60\",\"message_type\":\"review_request\",\"body\":\"#reviewrequest backport #59 to v1.x in socialcast/socialcast-git-extensions #scgitx\\n\\n/cc @SocialcastDevelopers\"}}")
+        .to_return(:status => 200, :body => "", :headers => {})
 
       expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:backportpr).and_call_original
       Socialcast::Gitx::CLI.start ['backportpr', '59', 'v1.x']
@@ -966,9 +957,8 @@ describe Socialcast::Gitx::CLI do
                    }]
       }
 
-      stub_request(:get, "https://api.github.com/search/issues?q=abc123%20type:pr%20repo:socialcast/socialcast-git-extensions").
-        with(:headers => { 'Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate', 'Authorization' => /token\s\w+/, 'Content-Type' => 'application/json', 'User-Agent' => 'socialcast-git-extensions'}).
-        to_return(:status => 200, :body => stub_response.to_json, :headers => {})
+      stub_request(:get, "https://api.github.com/search/issues?q=abc123%20type:pr%20repo:socialcast/socialcast-git-extensions")
+        .to_return(:status => 200, :body => stub_response.to_json, :headers => {})
       expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:findpr).and_call_original
       allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:say).with("Searching github pull requests for abc123")
       allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:say).with("\nhttps://github.com/batterseapower/pinyin-toolkit/issues/132\n\tLine Number Indexes Beyond 20 Not Displayed\n\tNick3C 2009-07-12T20:10:41Z")
@@ -984,17 +974,15 @@ describe Socialcast::Gitx::CLI do
       end
       context 'when description != nil' do
         it do
-          stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-            to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1"}), :headers => {})
+          stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls")
+            .to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1"}), :headers => {})
 
-          stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO").
-            to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
+          stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
+            .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
 
           stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
-            .with(
-              :body => "{\"body\":\"#reviewrequest \\n/cc @SocialcastDevelopers #scgitx\"}",
-              :headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token faketoken', 'Content-Length'=>'61', 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'}
-            ).to_return(:status => 200, :body => "{}", :headers => {})
+            .with(:body => "{\"body\":\"#reviewrequest \\n/cc @SocialcastDevelopers #scgitx\"}")
+            .to_return(:status => 200, :body => "{}", :headers => {})
 
           stub_message "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 \n\ntesting\n\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed", :message_type => 'review_request'
           allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
@@ -1011,15 +999,13 @@ describe Socialcast::Gitx::CLI do
 
     context 'when review_buddies are specified via a /config YML file' do
       before do
-        stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-          to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1"}), :headers => {})
-        stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO").
-          to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
+        stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls")
+          .to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1"}), :headers => {})
+        stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
+          .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
         stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
-          .with(
-            :body => pr_comment_body,
-            :headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token faketoken', 'Content-Length'=> pr_comment_body.length, 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'}
-          ).to_return(:status => 200, :body => "{}", :headers => {})
+          .with(:body => pr_comment_body)
+          .to_return(:status => 200, :body => "{}", :headers => {})
 
         stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
         allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:socialcast_review_buddy).and_return('JaneDoe')
@@ -1068,8 +1054,8 @@ describe Socialcast::Gitx::CLI do
     end
     context 'when description != nil' do
       it do
-        stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls").
-          to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1"}), :headers => {})
+        stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls")
+          .to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1"}), :headers => {})
 
         Socialcast::Gitx::CLI.start ['createpr', '--description', 'testing']
 
@@ -1088,14 +1074,12 @@ describe Socialcast::Gitx::CLI do
         allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config_file).and_return(Pathname(''))
       end
       it do
-        stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO").
-          to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
+        stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
+          .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
 
         stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
-          .with(
-            :body => "{\"body\":\"#reviewrequest \\n/cc @SocialcastDevelopers #scgitx\"}",
-            :headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token faketoken', 'Content-Length'=>'61', 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'}
-          ).to_return(:status => 200, :body => "{}", :headers => {})
+          .with(:body => "{\"body\":\"#reviewrequest \\n/cc @SocialcastDevelopers #scgitx\"}")
+          .to_return(:status => 200, :body => "{}", :headers => {})
 
         stub_message "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 \n\ntesting\n\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed", :message_type => 'review_request'
         allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
@@ -1111,13 +1095,11 @@ describe Socialcast::Gitx::CLI do
 
     context 'when review_buddies are specified via a /config YML file' do
       before do
-        stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO").
-          to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
+        stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
+          .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
         stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
-          .with(
-            :body => pr_comment_body,
-            :headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token faketoken', 'Content-Length'=> pr_comment_body.length, 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'}
-          ).to_return(:status => 200, :body => "{}", :headers => {})
+          .with(:body => pr_comment_body)
+          .to_return(:status => 200, :body => "{}", :headers => {})
 
         stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
         allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:socialcast_review_buddy).and_return('JaneDoe')
@@ -1163,10 +1145,9 @@ describe Socialcast::Gitx::CLI do
   describe '#promote' do
     before do
       stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
-        .with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Authorization'=>'token faketoken', 'Content-Type'=>'application/json', 'User-Agent'=>'socialcast-git-extensions'})
         .to_return(:status => 200, :body => "[]", :headers => {})
 
-      stub_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers", :force_post => true
+      stub_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
       Socialcast::Gitx::CLI.start ['promote']
     end
     it 'should integrate into staging' do
