@@ -58,17 +58,17 @@ describe Socialcast::Gitx::CLI do
           Socialcast::Gitx::CLI.start ['integrate']
 
           expect(stubbed_executed_commands).to eq([
-                                                    "git pull origin FOO",
-                                                    "git pull origin master",
-                                                    "git push origin HEAD",
-                                                    "git branch -D prototype",
-                                                    "git fetch origin",
-                                                    "git checkout prototype",
-                                                    "git pull . FOO",
-                                                    "git push origin HEAD",
-                                                    "git checkout FOO",
-                                                    "git checkout FOO"
-                                                  ])
+            "git pull origin FOO",
+            "git pull origin master",
+            "git push origin HEAD",
+            "git branch -D prototype",
+            "git fetch origin",
+            "git checkout prototype",
+            "git pull . FOO",
+            "git push origin HEAD",
+            "git checkout FOO",
+            "git checkout FOO"
+          ])
           expect(github_api_pulls_list).to have_been_requested
         end
       end
@@ -81,17 +81,17 @@ describe Socialcast::Gitx::CLI do
           Socialcast::Gitx::CLI.start ['integrate']
 
           expect(stubbed_executed_commands).to eq([
-                                                    "git pull origin FOO",
-                                                    "git pull origin master",
-                                                    "git push origin HEAD",
-                                                    "git branch -D special-prototype",
-                                                    "git fetch origin",
-                                                    "git checkout special-prototype",
-                                                    "git pull . FOO",
-                                                    "git push origin HEAD",
-                                                    "git checkout FOO",
-                                                    "git checkout FOO"
-                                                  ])
+            "git pull origin FOO",
+            "git pull origin master",
+            "git push origin HEAD",
+            "git branch -D special-prototype",
+            "git fetch origin",
+            "git checkout special-prototype",
+            "git pull . FOO",
+            "git push origin HEAD",
+            "git checkout FOO",
+            "git checkout FOO"
+          ])
         end
       end
       context 'when target branch == prototype' do
@@ -101,17 +101,17 @@ describe Socialcast::Gitx::CLI do
           Socialcast::Gitx::CLI.start ['integrate', 'prototype']
 
           expect(stubbed_executed_commands).to eq([
-                                                    "git pull origin FOO",
-                                                    "git pull origin master",
-                                                    "git push origin HEAD",
-                                                    "git branch -D prototype",
-                                                    "git fetch origin",
-                                                    "git checkout prototype",
-                                                    "git pull . FOO",
-                                                    "git push origin HEAD",
-                                                    "git checkout FOO",
-                                                    "git checkout FOO"
-                                                  ])
+            "git pull origin FOO",
+            "git pull origin master",
+            "git push origin HEAD",
+            "git branch -D prototype",
+            "git fetch origin",
+            "git checkout prototype",
+            "git pull . FOO",
+            "git push origin HEAD",
+            "git checkout FOO",
+            "git checkout FOO"
+          ])
         end
       end
       context 'when target branch == staging' do
@@ -121,23 +121,23 @@ describe Socialcast::Gitx::CLI do
           Socialcast::Gitx::CLI.start ['integrate', 'staging']
 
           expect(stubbed_executed_commands).to eq([
-                                                    "git pull origin FOO",
-                                                    "git pull origin master",
-                                                    "git push origin HEAD",
-                                                    "git branch -D staging",
-                                                    "git fetch origin",
-                                                    "git checkout staging",
-                                                    "git pull . FOO",
-                                                    "git push origin HEAD",
-                                                    "git checkout FOO",
-                                                    "git branch -D prototype",
-                                                    "git fetch origin",
-                                                    "git checkout prototype",
-                                                    "git pull . staging",
-                                                    "git push origin HEAD",
-                                                    "git checkout staging",
-                                                    "git checkout FOO"
-                                                  ])
+            "git pull origin FOO",
+            "git pull origin master",
+            "git push origin HEAD",
+            "git branch -D staging",
+            "git fetch origin",
+            "git checkout staging",
+            "git pull . FOO",
+            "git push origin HEAD",
+            "git checkout FOO",
+            "git branch -D prototype",
+            "git fetch origin",
+            "git checkout prototype",
+            "git pull . staging",
+            "git push origin HEAD",
+            "git checkout staging",
+            "git checkout FOO"
+          ])
         end
       end
       context 'when target branch != staging || prototype' do
