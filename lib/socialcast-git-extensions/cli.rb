@@ -335,11 +335,11 @@ module Socialcast
       end
 
       def use_pr_comments?
-        config['comment_via_pull_request'] == true
+        config['share_via_pr_comments'] == true
       end
 
       # post a message in socialcast
-      # skip sharing message if CLI quiet option is present or config quiet option is 'true'
+      # skip sharing message if CLI quiet option is present
       def post(message, params = {})
         return if options[:quiet]
         ActiveResource::Base.logger = Logger.new(STDOUT) if options[:trace]

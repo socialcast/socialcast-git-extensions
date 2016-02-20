@@ -29,6 +29,8 @@ Test the token with the [`git findpr`](https://github.com/socialcast/socialcast-
 
 ### Options
 * ```--quiet```: suppress posting message in Socialcast
+* config/scgitx.yml option `share_via_pr_comments`: Set to `true` to post reviewrequest and integration messages
+as pull request comments instead of Socialcast posts.
 
 ## git start <new_branch_name (optional)>
 
