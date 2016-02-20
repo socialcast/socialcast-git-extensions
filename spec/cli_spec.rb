@@ -7,6 +7,14 @@ describe Socialcast::Gitx::CLI do
     expect(Socialcast::CommandLine::Message).to receive(:create).with(params.merge(:body => message_body)).and_return(double(:permalink_url => 'https://community.socialcast.com/messages/1234'))
   end
 
+  let(:git_update_commands) do
+    [
+      "git pull origin FOO",
+      "git pull origin master",
+      "git push origin HEAD"
+    ]
+  end
+
   before do
     Socialcast::Gitx::CLI.instance_eval do # to supress warning from stubbing ldap_config
       @no_tasks = @no_commands = true
@@ -150,10 +158,11 @@ describe Socialcast::Gitx::CLI do
           .with(:body => "{\"body\":\"Integrated into prototype\"}")
           .to_return(:status => 200, :body => "{}", :headers => {})
       end
+      before do
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:use_pr_comments?).and_return(use_pr_comments)
+      end
       context 'when use_pr_comments? is false' do
-        before do
-          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:use_pr_comments?).and_return(false)
-        end
+        let(:use_pr_comments) { false }
         it 'does not comment on the PR posts a message' do
           expect_message "#worklog integrating FOO into prototype in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
           Socialcast::Gitx::CLI.start ['integrate']
@@ -175,9 +184,7 @@ describe Socialcast::Gitx::CLI do
         end
       end
       context 'when use_pr_comments? is true' do
-        before do
-          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:use_pr_comments?).and_return(true)
-        end
+        let(:use_pr_comments) { true }
         it 'comments on the PR and does not post a message' do
           Socialcast::Gitx::CLI.start ['integrate']
 
@@ -1049,13 +1056,6 @@ describe Socialcast::Gitx::CLI do
   end
 
   describe '#reviewrequest' do
-    let(:git_update_commands) do
-      [
-        "git pull origin FOO",
-        "git pull origin master",
-        "git push origin HEAD"
-      ]
-    end
     let!(:github_create_pr) do
       stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls")
         .to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1"}), :headers => {})
@@ -1073,6 +1073,7 @@ describe Socialcast::Gitx::CLI do
     before do
       stub_github_create_pr_comment
       allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:use_pr_comments?).and_return(use_pr_comments)
+      allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
     end
     context 'when there are no review_buddies specified' do
       before do
@@ -1082,7 +1083,6 @@ describe Socialcast::Gitx::CLI do
       context 'when use_pr_comments? is false' do
         it do
           expect_message "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 \n\ntesting\n\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed", :message_type => 'review_request'
-          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
 
           expect(stubbed_executed_commands).to eq(git_update_commands)
@@ -1095,7 +1095,6 @@ describe Socialcast::Gitx::CLI do
       context 'when use_pr_comments? is true' do
         let(:use_pr_comments) { true }
         it do
-          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
 
           expect(stubbed_executed_commands).to eq(git_update_commands)
@@ -1112,7 +1111,6 @@ describe Socialcast::Gitx::CLI do
       before do
         allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:socialcast_review_buddy).and_return('JaneDoe')
         allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:github_review_buddy).and_return('janedoe')
-        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
       end
       context 'and additional reviewers are specified' do
         let(:message_body) { "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 assigned to @JaneDoe\n\ntesting\n\nAssigned additionally to @JohnSmith for API review\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed" }
@@ -1123,6 +1121,7 @@ describe Socialcast::Gitx::CLI do
             Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-a', 'a']
 
             expect(stubbed_executed_commands).to eq(git_update_commands)
+            expect(github_create_pr).to have_been_requested
             expect(github_assign_pr).to have_been_requested
 
             expect(stub_github_create_pr_comment).to_not have_been_requested
@@ -1132,6 +1131,148 @@ describe Socialcast::Gitx::CLI do
           let(:use_pr_comments) { true }
           it do
             Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-a', 'a']
+
+            expect(stubbed_executed_commands).to eq(git_update_commands)
+            expect(github_create_pr).to have_been_requested
+            expect(github_assign_pr).to have_been_requested
+
+            expect(stub_github_create_pr_comment).to have_been_requested
+          end
+        end
+      end
+      context 'and a developer group is specified' do
+        let(:message_body) { "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 assigned to @JaneDoe\n\ntesting\n\n/cc @#{another_group} #scgitx\n\n1 file changed" }
+        let(:pr_comment_body) { "{\"body\":\"#reviewrequest assigned to @JaneDoe \\n/cc @#{another_group} #scgitx\"}" }
+        let(:another_group) { 'AnotherDeveloperGroup' }
+        before do
+          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return({'developer_group' => another_group})
+        end
+        context 'when use_pr_comments? is false' do
+          it do
+            expect_message message_body, :message_type => 'review_request'
+            Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+            expect(github_create_pr).to have_been_requested
+            expect(github_assign_pr).to have_been_requested
+            expect(stub_github_create_pr_comment).to_not have_been_requested
+          end
+        end
+        context 'when use_pr_comments? is true' do
+          let(:use_pr_comments) { true }
+          it do
+            Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+            expect(github_create_pr).to have_been_requested
+            expect(github_assign_pr).to have_been_requested
+            expect(stub_github_create_pr_comment).to have_been_requested
+          end
+        end
+      end
+      context 'and additional reviewers are not specified' do
+        let(:message_body) { "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 assigned to @JaneDoe\n\ntesting\n\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed" }
+        let(:pr_comment_body) { "{\"body\":\"#reviewrequest assigned to @JaneDoe \\n/cc @SocialcastDevelopers #scgitx\"}" }
+        context 'when use_pr_comments? is false' do
+          it do
+            expect_message message_body, :message_type => 'review_request'
+            Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+            expect(github_create_pr).to have_been_requested
+            expect(github_assign_pr).to have_been_requested
+            expect(stub_github_create_pr_comment).to_not have_been_requested
+          end
+        end
+        context 'when use_pr_comments? is true' do
+          let(:use_pr_comments) { true }
+          it do
+            Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+            expect(github_create_pr).to have_been_requested
+            expect(github_assign_pr).to have_been_requested
+            expect(stub_github_create_pr_comment).to have_been_requested
+          end
+        end
+      end
+    end
+  end
+
+  describe '#createpr' do
+    let!(:github_pr_create) do
+      stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls")
+        .to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1"}), :headers => {})
+    end
+    it do
+      Socialcast::Gitx::CLI.start ['createpr', '--description', 'testing']
+
+      expect(stubbed_executed_commands).to eq git_update_commands
+      expect(github_pr_create).to have_been_requested
+    end
+  end
+
+  describe '#assignpr' do
+    let!(:github_find_pr_for_branch) do
+      stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
+        .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
+    end
+    let(:stub_github_create_pr_comment) do
+      stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
+        .with(:body => pr_comment_body)
+        .to_return(:status => 200, :body => "{}", :headers => {})
+    end
+    let(:use_pr_comments) { false }
+    before do
+      stub_github_create_pr_comment
+      allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:use_pr_comments?).and_return(use_pr_comments)
+      allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
+    end
+    context 'when there are no review_buddies specified' do
+      before do
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config_file).and_return(Pathname(''))
+      end
+      let(:pr_comment_body) { "{\"body\":\"#reviewrequest \\n/cc @SocialcastDevelopers #scgitx\"}" }
+      context 'when use_pr_comments? is false' do
+        it do
+          expect_message "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 \n\ntesting\n\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed", :message_type => 'review_request'
+          Socialcast::Gitx::CLI.start ['assignpr', '-s']
+
+          expect(stubbed_executed_commands).to eq(git_update_commands)
+          expect(github_find_pr_for_branch).to have_been_requested
+
+          expect(stub_github_create_pr_comment).to_not have_been_requested
+        end
+      end
+      context 'when use_pr_comments? is true' do
+        let(:use_pr_comments) { true }
+        it do
+          Socialcast::Gitx::CLI.start ['assignpr', '-s']
+
+          expect(stubbed_executed_commands).to eq(git_update_commands)
+          expect(github_find_pr_for_branch).to have_been_requested
+
+          expect(stub_github_create_pr_comment).to have_been_requested
+        end
+      end
+    end
+
+    context 'when review_buddies are specified via a /config YML file' do
+      let!(:github_assign_pr) { stub_request(:patch, "http://api.github.com/repos/repo/project/issues/1").to_return(:status => 200) }
+      before do
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:socialcast_review_buddy).and_return('JaneDoe')
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:github_review_buddy).and_return('janedoe')
+      end
+      context 'and additional reviewers are specified' do
+        let(:message_body) { "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 assigned to @JaneDoe\n\ntesting\n\nAssigned additionally to @JohnSmith for API review\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed" }
+        let(:pr_comment_body) { "{\"body\":\"#reviewrequest assigned to @JaneDoe \\nAssigned additionally to @JohnSmith for API review \\n/cc @SocialcastDevelopers #scgitx\"}" }
+        context 'when use_pr_comments? is false' do
+          it do
+            expect_message message_body, :message_type => 'review_request'
+            Socialcast::Gitx::CLI.start ['assignpr', '-a', 'a']
+
+            expect(stubbed_executed_commands).to eq(git_update_commands)
+            expect(github_assign_pr).to have_been_requested
+
+            expect(stub_github_create_pr_comment).to_not have_been_requested
+          end
+        end
+        context 'when use_pr_comments? is true' do
+          let(:use_pr_comments) { true }
+          it do
+            Socialcast::Gitx::CLI.start ['assignpr', '-a', 'a']
 
             expect(stubbed_executed_commands).to eq(git_update_commands)
             expect(github_assign_pr).to have_been_requested
@@ -1150,7 +1291,7 @@ describe Socialcast::Gitx::CLI do
         context 'when use_pr_comments? is false' do
           it do
             expect_message message_body, :message_type => 'review_request'
-            Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+            Socialcast::Gitx::CLI.start ['assignpr', '-s']
             expect(github_assign_pr).to have_been_requested
             expect(stub_github_create_pr_comment).to_not have_been_requested
           end
@@ -1158,7 +1299,7 @@ describe Socialcast::Gitx::CLI do
         context 'when use_pr_comments? is true' do
           let(:use_pr_comments) { true }
           it do
-            Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+            Socialcast::Gitx::CLI.start ['assignpr', '-s']
             expect(github_assign_pr).to have_been_requested
             expect(stub_github_create_pr_comment).to have_been_requested
           end
@@ -1170,7 +1311,7 @@ describe Socialcast::Gitx::CLI do
         context 'when use_pr_comments? is false' do
           it do
             expect_message message_body, :message_type => 'review_request'
-            Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+            Socialcast::Gitx::CLI.start ['assignpr', '-s']
             expect(github_assign_pr).to have_been_requested
             expect(stub_github_create_pr_comment).to_not have_been_requested
           end
@@ -1178,104 +1319,10 @@ describe Socialcast::Gitx::CLI do
         context 'when use_pr_comments? is true' do
           let(:use_pr_comments) { true }
           it do
-            Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
+            Socialcast::Gitx::CLI.start ['assignpr', '-s']
             expect(github_assign_pr).to have_been_requested
             expect(stub_github_create_pr_comment).to have_been_requested
           end
-        end
-      end
-    end
-  end
-
-  describe '#createpr' do
-    before do
-      allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config_file).and_return(Pathname(''))
-    end
-    context 'when description != nil' do
-      it do
-        stub_request(:post, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls")
-          .to_return(:status => 200, :body => %q({"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1"}), :headers => {})
-
-        Socialcast::Gitx::CLI.start ['createpr', '--description', 'testing']
-
-        expect(stubbed_executed_commands).to eq([
-          "git pull origin FOO",
-          "git pull origin master",
-          "git push origin HEAD"
-        ])
-      end
-    end
-  end
-
-  describe '#assignpr' do
-    context 'when there are no review_buddies specified' do
-      before do
-        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config_file).and_return(Pathname(''))
-      end
-      it do
-        stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
-          .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
-
-        stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
-          .with(:body => "{\"body\":\"#reviewrequest \\n/cc @SocialcastDevelopers #scgitx\"}")
-          .to_return(:status => 200, :body => "{}", :headers => {})
-
-        expect_message "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 \n\ntesting\n\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed", :message_type => 'review_request'
-        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
-        Socialcast::Gitx::CLI.start ['assignpr', '-s']
-
-        expect(stubbed_executed_commands).to eq([
-          "git pull origin FOO",
-          "git pull origin master",
-          "git push origin HEAD"
-        ])
-      end
-    end
-
-    context 'when review_buddies are specified via a /config YML file' do
-      before do
-        stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
-          .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]), :headers => {})
-        stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
-          .with(:body => pr_comment_body)
-          .to_return(:status => 200, :body => "{}", :headers => {})
-
-        stub_request(:patch, "http://github.com/repos/repo/project/issues/1").to_return(:status => 200)
-        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:socialcast_review_buddy).and_return('JaneDoe')
-      end
-      context 'and additional reviewers are specified' do
-        let(:message_body) { "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 assigned to @JaneDoe\n\ntesting\n\nAssigned additionally to @JohnSmith for API review\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed" }
-        let(:pr_comment_body) { "{\"body\":\"#reviewrequest assigned to @JaneDoe \\nAssigned additionally to @JohnSmith for API review \\n/cc @SocialcastDevelopers #scgitx\"}" }
-        it do
-          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
-          expect_message message_body, :message_type => 'review_request'
-          Socialcast::Gitx::CLI.start ['assignpr', '-a', 'a']
-
-          expect(stubbed_executed_commands).to eq([
-            "git pull origin FOO",
-            "git pull origin master",
-            "git push origin HEAD"
-          ])
-        end
-      end
-      context 'and a developer group is specified' do
-        let(:message_body) { "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 assigned to @JaneDoe\n\ntesting\n\n/cc @#{another_group} #scgitx\n\n1 file changed" }
-        let(:pr_comment_body) { "{\"body\":\"#reviewrequest assigned to @JaneDoe \\n/cc @#{another_group} #scgitx\"}" }
-        let(:another_group) { 'AnotherDeveloperGroup' }
-        it do
-          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
-          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:config).and_return({'developer_group' => another_group})
-          expect_message message_body, :message_type => 'review_request'
-          Socialcast::Gitx::CLI.start ['assignpr', '-s']
-        end
-      end
-      context 'and additional reviewers are not specified' do
-        let(:message_body) { "#reviewrequest for FOO in socialcast/socialcast-git-extensions\nPR http://github.com/repo/project/pulls/1 assigned to @JaneDoe\n\ntesting\n\n/cc @SocialcastDevelopers #scgitx\n\n1 file changed" }
-        let(:pr_comment_body) { "{\"body\":\"#reviewrequest assigned to @JaneDoe \\n/cc @SocialcastDevelopers #scgitx\"}" }
-        it do
-          allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:changelog_summary).and_return('1 file changed')
-          expect_message message_body, :message_type => 'review_request'
-          Socialcast::Gitx::CLI.start ['assignpr', '-s']
         end
       end
     end
@@ -1285,12 +1332,9 @@ describe Socialcast::Gitx::CLI do
     before do
       stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
         .to_return(:status => 200, :body => "[]", :headers => {})
-
-      expect_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
-      Socialcast::Gitx::CLI.start ['promote']
     end
-    it 'should integrate into staging' do
-      expect(stubbed_executed_commands).to eq([
+    let(:staging_integration_commands) do
+      [
         "git pull origin FOO",
         "git pull origin master",
         "git push origin HEAD",
@@ -1307,7 +1351,12 @@ describe Socialcast::Gitx::CLI do
         "git push origin HEAD",
         "git checkout staging",
         "git checkout FOO"
-      ])
+      ]
+    end
+    it do
+      expect_message "#worklog integrating FOO into staging in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
+      Socialcast::Gitx::CLI.start ['promote']
+      expect(stubbed_executed_commands).to eq staging_integration_commands
     end
   end
 
