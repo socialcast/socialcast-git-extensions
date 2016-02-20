@@ -314,12 +314,14 @@ module Socialcast
         integrate_branch(base_branch, staging_branch)
         cleanup
 
-        message = <<-EOS.strip_heredoc
-          #worklog releasing #{branch} to #{base_branch} in #{current_repo} #scgitx
-          /cc @#{developer_group}
-        EOS
+        unless use_pr_comments?
+          message = <<-EOS.strip_heredoc
+            #worklog releasing #{branch} to #{base_branch} in #{current_repo} #scgitx
+            /cc @#{developer_group}
+          EOS
 
-        post message.strip
+          post message.strip
+        end
       end
 
       private
