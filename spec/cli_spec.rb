@@ -962,11 +962,11 @@ describe Socialcast::Gitx::CLI do
     before do
       expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:backportpr).and_call_original
       allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:use_pr_comments?).and_return(use_pr_comments)
-      Socialcast::Gitx::CLI.start ['backportpr', '59', 'v1.x']
     end
     context 'when use_pr_comments? is false' do
       let(:use_pr_comments) { false }
       it 'creates a branch based on v1.x and cherry-picks in PR 59' do
+        Socialcast::Gitx::CLI.start ['backportpr', '59', 'v1.x']
         expect(github_pr_show).to have_been_requested
         expect(github_pr_commits_list).to have_been_requested
         expect(github_pr_create).to have_been_requested
@@ -978,9 +978,33 @@ describe Socialcast::Gitx::CLI do
     context 'when use_pr_comments? is true' do
       let(:use_pr_comments) { true }
       it 'posts a pr comment instead of posting a socialcast message' do
+        Socialcast::Gitx::CLI.start ['backportpr', '59', 'v1.x']
         expect(github_pr_show).to have_been_requested
         expect(github_pr_commits_list).to have_been_requested
         expect(github_pr_create).to have_been_requested
+
+        expect(github_pr_comment_create).to have_been_requested
+        expect(socialcast_message_create).to_not have_been_requested
+      end
+    end
+    context 'when a backport reviewer is configured' do
+      before do
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:github_track_reviewer).with('Backport').and_return('janedoe')
+        allow_any_instance_of(Socialcast::Gitx::CLI).to receive(:socialcast_track_reviewer).with('Backport').and_return('JaneDoe')
+      end
+      let(:use_pr_comments) { true }
+      let!(:github_pr_comment_create) do
+        stub_request(:post, "https://api.github.com/repos/repo/project/issues/60/comments")
+          .with(:body => "{\"body\":\"#reviewrequest backport @JaneDoe /cc @SocialcastDevelopers #scgitx\"}")
+          .to_return(:status => 200, :body => "{}", :headers => {})
+      end
+      let!(:github_assign_pr) { stub_request(:patch, "https://api.github.com/repos/repo/project/issues/60").to_return(:status => 200) }
+      it 'mentions the track reviewer' do
+        Socialcast::Gitx::CLI.start ['backportpr', '59', 'v1.x']
+        expect(github_pr_show).to have_been_requested
+        expect(github_pr_commits_list).to have_been_requested
+        expect(github_pr_create).to have_been_requested
+        expect(github_assign_pr).to have_been_requested
 
         expect(github_pr_comment_create).to have_been_requested
         expect(socialcast_message_create).to_not have_been_requested

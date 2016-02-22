@@ -136,7 +136,7 @@ module Socialcast
         pr_hash = create_pull_request(backport_branch, repo, description)
         assign_pull_request(assignee, pr_hash['issue_url']) if assignee
 
-        reviewer_mention = "@#{socialcast_reviwer}" if socialcast_reviewer
+        reviewer_mention = "@#{socialcast_reviewer}" if socialcast_reviewer
         if use_pr_comments?
           issue_message = ['#reviewrequest backport', reviewer_mention, "/cc @#{developer_group} #scgitx"].compact.join(' ')
           comment_on_issue(pr_hash['issue_url'], issue_message)
