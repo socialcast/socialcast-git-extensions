@@ -238,8 +238,7 @@ module Socialcast
         say("WARNING: Unable to find current pull request.  Use `git createpr` to create one.", :red) unless current_pr
 
         if use_pr_comments? && current_pr
-          issue_message = "Integrated into #{target_branch}"
-          comment_on_issue(current_pr['issue_url'], issue_message) unless options[:quiet]
+          add_label_to_issue(current_pr['issue_url'], target_branch)
         else
           message = <<-EOS.strip_heredoc
             #worklog integrating #{branch} into #{target_branch} in #{current_repo} #scgitx

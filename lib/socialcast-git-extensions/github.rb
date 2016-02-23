@@ -78,6 +78,12 @@ module Socialcast
         github_api_request 'POST', "#{issue_url}/comments", { :body => comment_body }.to_json
       end
 
+      # add a label to an issue
+      # https://developer.github.com/v3/issues/labels/#add-labels-to-an-issue
+      def add_label_to_issue(issue_url, label_name)
+        github_api_request 'POST', "#{issue_url}/labels", [ label_name ].to_json
+      end
+
       # @returns [String] socialcast username to assign the review to
       # @returns [nil] when no buddy system configured or user not found
       def socialcast_review_buddy(current_user)

@@ -153,9 +153,9 @@ describe Socialcast::Gitx::CLI do
         stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls?head=socialcast:FOO")
           .to_return(:status => 200, :body => %q([{"html_url": "http://github.com/repo/project/pulls/1", "issue_url": "http://api.github.com/repos/repo/project/issues/1", "body":"testing"}]))
       end
-      let!(:github_api_comments_create) do
-        stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/comments")
-          .with(:body => "{\"body\":\"Integrated into prototype\"}")
+      let!(:github_api_label_add) do
+        stub_request(:post, "http://api.github.com/repos/repo/project/issues/1/labels")
+          .with(:body => "[\"prototype\"]")
           .to_return(:status => 200, :body => "{}", :headers => {})
       end
       before do
@@ -180,7 +180,7 @@ describe Socialcast::Gitx::CLI do
             "git checkout FOO"
           ])
           expect(github_api_pulls_list).to have_been_requested
-          expect(github_api_comments_create).to_not have_been_requested
+          expect(github_api_label_add).to_not have_been_requested
         end
       end
       context 'when use_pr_comments? is true' do
@@ -201,7 +201,7 @@ describe Socialcast::Gitx::CLI do
             "git checkout FOO"
           ])
           expect(github_api_pulls_list).to have_been_requested
-          expect(github_api_comments_create).to have_been_requested
+          expect(github_api_label_add).to have_been_requested
         end
       end
     end
