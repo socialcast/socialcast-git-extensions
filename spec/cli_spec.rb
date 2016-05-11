@@ -247,6 +247,12 @@ describe Socialcast::Gitx::CLI do
             "git checkout staging",
             "git pull . master",
             "git push origin HEAD",
+            "git checkout master",
+            "git branch -D prototype",
+            "git fetch origin",
+            "git checkout prototype",
+            "git pull . master",
+            "git push origin HEAD",
             "git checkout master"
           ])
         end
@@ -303,6 +309,12 @@ describe Socialcast::Gitx::CLI do
             "git checkout staging",
             "git pull . master",
             "git push origin HEAD",
+            "git checkout master",
+            "git branch -D prototype",
+            "git fetch origin",
+            "git checkout prototype",
+            "git pull . master",
+            "git push origin HEAD",
             "git checkout master"
           ])
         end
@@ -351,6 +363,12 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . special-master",
           "git push origin HEAD",
+          "git checkout special-master",
+          "git branch -D prototype",
+          "git fetch origin",
+          "git checkout prototype",
+          "git pull . special-master",
+          "git push origin HEAD",
           "git checkout special-master"
         ])
       end
@@ -387,6 +405,12 @@ describe Socialcast::Gitx::CLI do
           "git branch -D staging",
           "git fetch origin",
           "git checkout staging",
+          "git pull . special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git branch -D prototype",
+          "git fetch origin",
+          "git checkout prototype",
           "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
@@ -426,6 +450,12 @@ describe Socialcast::Gitx::CLI do
           "git branch -D staging",
           "git fetch origin",
           "git checkout staging",
+          "git pull . special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git branch -D prototype",
+          "git fetch origin",
+          "git checkout prototype",
           "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
