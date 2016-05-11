@@ -311,7 +311,7 @@ module Socialcast
         run_cmd "git pull . #{branch}"
         run_cmd "git push origin HEAD"
         integrate_branch(base_branch, staging_branch)
-        integrate_branch(base_branch, prototype_branch) unless enforce_staging_before_release?
+        integrate_branch(base_branch, prototype_branch)
         cleanup
 
         unless use_pr_comments?

@@ -247,6 +247,12 @@ describe Socialcast::Gitx::CLI do
             "git checkout staging",
             "git pull . master",
             "git push origin HEAD",
+            "git checkout master",
+            "git branch -D prototype",
+            "git fetch origin",
+            "git checkout prototype",
+            "git pull . master",
+            "git push origin HEAD",
             "git checkout master"
           ])
         end
@@ -284,7 +290,7 @@ describe Socialcast::Gitx::CLI do
         let(:branches_in_last_known_good_staging) { ['another-branch'] }
         before do
           expect_message "#worklog releasing FOO to master in socialcast/socialcast-git-extensions #scgitx\n/cc @SocialcastDevelopers"
-          expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:enforce_staging_before_release?).twice.and_return(false)
+          expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:enforce_staging_before_release?).and_return(false)
           expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:yes?).and_return(true)
           expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:cleanup)
           Socialcast::Gitx::CLI.start ['release']
@@ -357,6 +363,12 @@ describe Socialcast::Gitx::CLI do
           "git checkout staging",
           "git pull . special-master",
           "git push origin HEAD",
+          "git checkout special-master",
+          "git branch -D prototype",
+          "git fetch origin",
+          "git checkout prototype",
+          "git pull . special-master",
+          "git push origin HEAD",
           "git checkout special-master"
         ])
       end
@@ -393,6 +405,12 @@ describe Socialcast::Gitx::CLI do
           "git branch -D staging",
           "git fetch origin",
           "git checkout staging",
+          "git pull . special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git branch -D prototype",
+          "git fetch origin",
+          "git checkout prototype",
           "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
@@ -432,6 +450,12 @@ describe Socialcast::Gitx::CLI do
           "git branch -D staging",
           "git fetch origin",
           "git checkout staging",
+          "git pull . special-master",
+          "git push origin HEAD",
+          "git checkout special-master",
+          "git branch -D prototype",
+          "git fetch origin",
+          "git checkout prototype",
           "git pull . special-master",
           "git push origin HEAD",
           "git checkout special-master"
