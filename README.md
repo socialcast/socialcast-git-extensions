@@ -11,6 +11,7 @@
   `socialcast authenticate --domain (your domain)`
 
 Where "(your domain)" would be the fully qualified domain name of the Socialcast community you will use for work e.g. [er.staging.socialcast.com](https://er.staging.socialcast.com)
+Where "Socialcast username: " would be your socialcast email.
 #### GitHub Token Installation
 Some of the extentions provided make use of the GitHub Application Token. When using commands such as [`git findpr`](https://github.com/socialcast/socialcast-git-extensions#git-findpr-) or [`git reviewrequest`](https://github.com/socialcast/socialcast-git-extensions#git-reviewrequest) the extensions will accept the credentials of the GitHub account and then install the GitHub token for you. If the GitHub account has two-factor authentication enabled then a manual installation of the GitHub Token is required.
 
