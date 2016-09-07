@@ -1123,6 +1123,10 @@ describe Socialcast::Gitx::CLI do
         .with(:body => pr_comment_body)
         .to_return(:status => 200, :body => "{}", :headers => {})
     end
+    let(:stub_get_socialcast_user) do
+      stub_request(:get, "https://testuser:testpassword@testdomain/api/userinfo.json")
+        .to_return(:status => 200, :body => '{"username": "TestUsername"}', :headers => {})
+    end
     let(:use_pr_comments) { false }
     before do
       stub_github_create_pr_comment
@@ -1148,6 +1152,9 @@ describe Socialcast::Gitx::CLI do
       end
       context 'when use_pr_comments? is true' do
         let(:use_pr_comments) { true }
+        before do
+          stub_get_socialcast_user
+        end
         it do
           Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
 
@@ -1155,6 +1162,7 @@ describe Socialcast::Gitx::CLI do
           expect(github_create_pr).to have_been_requested
           expect(github_find_pr_for_branch).to have_been_requested
 
+          expect(stub_get_socialcast_user).to have_been_requested
           expect(stub_github_create_pr_comment).to have_been_requested
         end
       end
@@ -1183,6 +1191,9 @@ describe Socialcast::Gitx::CLI do
         end
         context 'when use_pr_comments? is true' do
           let(:use_pr_comments) { true }
+          before do
+            stub_get_socialcast_user
+          end
           it do
             Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-a', 'a']
 
@@ -1190,6 +1201,7 @@ describe Socialcast::Gitx::CLI do
             expect(github_create_pr).to have_been_requested
             expect(github_assign_pr).to have_been_requested
 
+            expect(stub_get_socialcast_user).to have_been_requested
             expect(stub_github_create_pr_comment).to have_been_requested
           end
         end
@@ -1212,10 +1224,15 @@ describe Socialcast::Gitx::CLI do
         end
         context 'when use_pr_comments? is true' do
           let(:use_pr_comments) { true }
+          before do
+            stub_get_socialcast_user
+          end
           it do
             Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
             expect(github_create_pr).to have_been_requested
             expect(github_assign_pr).to have_been_requested
+
+            expect(stub_get_socialcast_user).to have_been_requested
             expect(stub_github_create_pr_comment).to have_been_requested
           end
         end
@@ -1234,10 +1251,14 @@ describe Socialcast::Gitx::CLI do
         end
         context 'when use_pr_comments? is true' do
           let(:use_pr_comments) { true }
+          before do
+            stub_get_socialcast_user
+          end
           it do
             Socialcast::Gitx::CLI.start ['reviewrequest', '--description', 'testing', '-s']
             expect(github_create_pr).to have_been_requested
             expect(github_assign_pr).to have_been_requested
+            expect(stub_get_socialcast_user).to have_been_requested
             expect(stub_github_create_pr_comment).to have_been_requested
           end
         end

@@ -34,6 +34,12 @@ module Socialcast
       def createpr
         update unless @skip_update
         description = options[:description] || editor_input(PULL_REQUEST_DESCRIPTION)
+
+        if use_pr_comments?
+          creator_socialcast_username = Socialcast::CommandLine::Authenticate.current_user['username'] rescue nil
+          description = "#{description}\n\nCreated by @#{creator_socialcast_username}" if creator_socialcast_username
+        end
+
         branch = current_branch
         repo = current_repo
         url = create_pull_request(branch, repo, description)['html_url']
