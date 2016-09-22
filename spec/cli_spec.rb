@@ -998,7 +998,7 @@ describe Socialcast::Gitx::CLI do
           'id' => 123,
           'permalink_url' => 'https://testdomain/messages/123'
         )
-      )
+      }
 
       stub_request(:post, "https://testuser:testpassword@testdomain/api/messages.json")
         .with(:body => message_request_data.to_json)
