@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.rubyforge_project = "socialcast-git-extensions"
 
   s.add_runtime_dependency 'rugged', '>= 0.23'
-  s.add_runtime_dependency 'socialcast', '~> 1.3.0'
+  s.add_runtime_dependency 'socialcast', '>= 1.4.0'
   s.add_runtime_dependency 'activesupport', '>= 4.0'
   s.add_runtime_dependency 'rest-client', '~> 1.7'
   s.add_runtime_dependency 'thor', '~> 0.19.1'

@@ -348,9 +348,10 @@ module Socialcast
       # skip sharing message if CLI quiet option is present
       def post(message, params = {})
         return if options[:quiet]
-        ActiveResource::Base.logger = Logger.new(STDOUT) if options[:trace]
-        Socialcast::CommandLine::Message.configure_from_credentials
-        response = Socialcast::CommandLine::Message.create params.merge(:body => message)
+
+        response = Socialcast::CommandLine::Message.with_debug(options[:trace]) do
+          Socialcast::CommandLine::Message.create params.merge(:body => message)
+        end
         say "Message has been posted: #{response.permalink_url}"
       end
     end
