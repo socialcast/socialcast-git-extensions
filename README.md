@@ -98,7 +98,7 @@ specialty_reviewers:
 
 release the current feature branch to master
 
-= Extra Git Extensions
+# Extra Git Extensions
 
 ## git cleanup
 
