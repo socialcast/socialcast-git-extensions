@@ -985,9 +985,24 @@ describe Socialcast::Gitx::CLI do
         .to_return(:status => 200, :body => "{}", :headers => {})
     end
     let!(:socialcast_message_create) do
+      message_request_data = {
+        'message' => {
+          'url' => 'https://github.com/socialcast/socialcast-git-extensions/pulls/60',
+          'message_type' => 'review_request',
+          'body' => "#reviewrequest backport #59 to v1.x in socialcast/socialcast-git-extensions #scgitx\n\n/cc @SocialcastDevelopers"
+        }
+      }
+
+      message_response_data = {
+        'message' => message_request_data['message'].merge(
+          'id' => 123,
+          'permalink_url' => 'https://testdomain/messages/123'
+        )
+      )
+
       stub_request(:post, "https://testuser:testpassword@testdomain/api/messages.json")
-        .with(:body => "{\"message\":{\"url\":\"https://github.com/socialcast/socialcast-git-extensions/pulls/60\",\"message_type\":\"review_request\",\"body\":\"#reviewrequest backport #59 to v1.x in socialcast/socialcast-git-extensions #scgitx\\n\\n/cc @SocialcastDevelopers\"}}")
-        .to_return(:status => 200, :body => "", :headers => {})
+        .with(:body => message_request_data.to_json)
+        .to_return(:status => 200, :body => message_response_data.to_json, :headers => {})
     end
     before do
       expect_any_instance_of(Socialcast::Gitx::CLI).to receive(:backportpr).and_call_original
