@@ -47,6 +47,7 @@ describe Socialcast::Gitx::Github do
     let(:branch) { 'my-http-and-https-branch' }
     let(:dummy_pr_list_response) { [{ 'dummy' => 'response' }] }
     before do
+      allow(test_instance).to receive(:authorization_token).and_return('abc123')
       expect_any_instance_of(RestClient::Request).to receive(:execute) do |instance|
         expect(instance.url).to eq 'https://api.github.com/repos/ownername/projectname/pulls?head=ownername:my-http-and-https-branch'
         '[{ "dummy": "response" }]'
