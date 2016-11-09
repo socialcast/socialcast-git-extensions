@@ -33,7 +33,7 @@ describe Socialcast::Gitx::Github do
         :body => body
       }
     end
-    let(:dummy_pr_created_response) { { :dummy => :response } }
+    let(:dummy_pr_created_response) { { 'dummy' => 'response' } }
     let(:body) { 'This is my pull request.' }
     before do
       allow(test_instance).to receive(:base_branch).and_return(base_branch)
@@ -44,9 +44,14 @@ describe Socialcast::Gitx::Github do
 
   describe '#pull_requests_for_branch' do
     subject { test_instance.send(:pull_requests_for_branch, repo, branch) }
-    let(:dummy_pr_list_response) { [{ :dummy => :response }] }
+    let(:branch) { 'my-http-and-https-branch' }
+    let(:dummy_pr_list_response) { [{ 'dummy' => 'response' }] }
     before do
-      expect(test_instance).to receive(:github_api_request).with('GET', 'repos/ownername/projectname/pulls?head=ownername:my-branch').and_return(dummy_pr_list_response)
+      allow(test_instance).to receive(:authorization_token).and_return('abc123')
+      expect_any_instance_of(RestClient::Request).to receive(:execute) do |instance|
+        expect(instance.url).to eq 'https://api.github.com/repos/ownername/projectname/pulls?head=ownername:my-http-and-https-branch'
+        '[{ "dummy": "response" }]'
+      end
     end
     it { is_expected.to eq dummy_pr_list_response }
   end

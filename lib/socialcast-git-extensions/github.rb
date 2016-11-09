@@ -121,7 +121,12 @@ module Socialcast
       end
 
       def github_api_request(method, path, payload = nil)
-        url = path.include?('http') ? path : "https://api.github.com/#{path}"
+        url = if path.start_with?('http://') || path.start_with?('https://')
+          path
+        else
+          "https://api.github.com/#{path}"
+        end
+
         JSON.parse RestClient::Request.new(:url => url, :method => method, :payload => payload, :headers => { :accept => :json, :content_type => :json, 'Authorization' => "token #{authorization_token}", :user_agent => 'socialcast-git-extensions' }).execute
       rescue RestClient::Exception => e
         process_error e
