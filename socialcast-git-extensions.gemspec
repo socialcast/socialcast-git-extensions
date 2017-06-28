@@ -17,12 +17,12 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'rugged', '>= 0.23'
   s.add_runtime_dependency 'socialcast', '>= 1.4.0'
   s.add_runtime_dependency 'activesupport', '>= 4.0'
-  s.add_runtime_dependency 'rest-client', '~> 1.7'
+  s.add_runtime_dependency 'rest-client', '~> 2.0'
   s.add_runtime_dependency 'thor', '~> 0.19.1'
   s.add_runtime_dependency 'rake', '>= 10.3'
   s.add_development_dependency 'rspec', '~> 3.0'
   s.add_development_dependency 'pry', '~>  0.9.12.6'
-  s.add_development_dependency 'webmock', '~> 1.21'
+  s.add_development_dependency 'webmock', '~> 2.3', '>= 2.3.1'
   s.add_development_dependency 'byebug'
 
   s.files         = `git ls-files`.split("\n")
