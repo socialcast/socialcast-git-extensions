@@ -1000,7 +1000,8 @@ describe Socialcast::Gitx::CLI do
         )
       }
 
-      stub_request(:post, "https://testuser:testpassword@testdomain/api/messages.json")
+      stub_request(:post, "https://testdomain/api/messages.json")
+        .with(:basic_auth => ['testuser', 'testpassword'])
         .with(:body => message_request_data.to_json)
         .to_return(:status => 200, :body => message_response_data.to_json, :headers => {})
     end
@@ -1139,7 +1140,8 @@ describe Socialcast::Gitx::CLI do
         .to_return(:status => 200, :body => "{}", :headers => {})
     end
     let(:stub_get_socialcast_user) do
-      stub_request(:get, "https://testuser:testpassword@testdomain/api/userinfo.json")
+      stub_request(:get, "https://testdomain/api/userinfo.json")
+        .with(:basic_auth => ['testuser', 'testpassword'])
         .to_return(:status => 200, :body => '{"username": "TestUsername"}', :headers => {})
     end
     let(:use_pr_comments) { false }
