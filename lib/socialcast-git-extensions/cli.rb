@@ -137,6 +137,7 @@ module Socialcast
         while commits_checked_count < commit_count
           commits_data = github_api_request('GET', pull_request_data['commits_url'] + "?page=#{page}")
           commits_checked_count += commits_data.size
+          raise 'Received empty commits data response! Could not pull all commits from PR' if commits_data.size == 0
 
           non_merge_commits_data = commits_data.select { |commit_data| commit_data['parents'].length == 1 }
           commits_to_cherry_pick += non_merge_commits_data.map { |commit| commit['sha'] }
