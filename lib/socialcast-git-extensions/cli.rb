@@ -128,13 +128,24 @@ module Socialcast
         socialcast_reviewer = socialcast_track_reviewer('Backport')
 
         pull_request_data = github_api_request('GET', "repos/#{repo}/pulls/#{pull_request_num}")
-        commits_data = github_api_request('GET', pull_request_data['commits_url'])
 
-        non_merge_commits_data = commits_data.select { |commit_data| commit_data['parents'].length == 1 }
-        shas = non_merge_commits_data.map { |commit| commit['sha'] }
+        commits_to_cherry_pick = []
+        commit_count = pull_request_data['commits']
+        commits_checked_count = 0
+        page = 1
+
+        while commits_checked_count < commit_count
+          commits_data = github_api_request('GET', pull_request_data['commits_url'] + "?page=#{page}")
+          commits_checked_count += commits_data.size
+          raise 'Received empty commits data response! Could not pull all commits from PR' if commits_data.size == 0
+
+          non_merge_commits_data = commits_data.select { |commit_data| commit_data['parents'].length == 1 }
+          commits_to_cherry_pick += non_merge_commits_data.map { |commit| commit['sha'] }
+          page += 1
+        end
 
         backport_branch = "backport_#{pull_request_num}_to_#{maintenance_branch}"
-        backport_to(backport_branch, shas)
+        backport_to(backport_branch, commits_to_cherry_pick)
 
         maintenance_branch_url = "https://github.com/#{repo}/tree/#{maintenance_branch}"
         description = "Backport ##{pull_request_num} to #{maintenance_branch_url}\n***\n#{pull_request_data['body']}"

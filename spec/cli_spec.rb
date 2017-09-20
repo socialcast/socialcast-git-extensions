@@ -971,7 +971,7 @@ describe Socialcast::Gitx::CLI do
         .to_return(:status => 200, :body => pr_response.to_json, :headers => {})
     end
     let!(:github_pr_commits_list) do
-      stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/commits")
+      stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/commits?page=1")
         .to_return(:status => 200, :body => commits_response.to_json, :headers => {})
     end
     let!(:github_pr_create) do
@@ -1056,6 +1056,90 @@ describe Socialcast::Gitx::CLI do
         expect(socialcast_message_create).to_not have_been_requested
       end
     end
+    context 'when backport has multiple pages of commits' do
+      let(:pr_response) do
+        # https://developer.github.com/v3/search/#search-issues
+        {
+          "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59",
+          "id" => 13712197,
+          "html_url" => "https://github.com/socialcast/socialcast-git-extensions/pull/59",
+          "diff_url" => "https://github.com/socialcast/socialcast-git-extensions/pull/59.diff",
+          "patch_url" => "https://github.com/socialcast/socialcast-git-extensions/pull/59.patch",
+          "issue_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/59",
+          "number" => 59,
+          "state" => "closed",
+          "title" => "additional-notifications",
+          "body" => "simply testing this out",
+          "created_at" => "2014-03-18T22:39:37Z",
+          "updated_at" => "2014-03-18T22:40:18Z",
+          "closed_at" => "2014-03-18T22:39:46Z",
+          "merged_at" => nil,
+          "merge_commit_sha" => "f73009f4eb245c84da90e8abf9be846c58bc1e3b",
+          "assignee" => nil,
+          "milestone" => nil,
+          "commits_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/commits",
+          "review_comments_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/comments",
+          "review_comment_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/comments/{number}",
+          "comments_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/issues/59/comments",
+          "statuses_url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/statuses/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+          "commits" => 2,
+        }
+      end
+      let(:commits_response) do
+        [
+          {
+            "sha" => "5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+            "commit" => {
+              "message" => "adding the ability to specify additional reviewers"
+            },
+            "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+            "parents" => [
+              {
+                "sha" => "1baae2de301c43d44297647f3f9c1e06697748ad",
+                "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/1baae2de301c43d44297647f3f9c1e06697748ad",
+                "html_url" => "https://github.com/socialcast/socialcast-git-extensions/commit/1baae2de301c43d44297647f3f9c1e06697748ad"
+              }
+            ]
+          }
+        ]
+      end
+
+      let(:commits_response2) do
+        [
+          {
+            "sha" => "5e30d5af3f4d1bb3a34cc97568299be028b65f6d",
+            "commit" => {
+              "message" => "adding the ability to specify additional reviewers"
+            },
+            "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6d",
+            "parents" => [
+              {
+                "sha" => "5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+                "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+                "html_url" => "https://github.com/socialcast/socialcast-git-extensions/commit/5e30d5af3f4d1bb3a34cc97568299be028b65f6f"
+              }
+            ]
+          }
+        ]
+      end
+
+      let!(:github_pr_commits_list2) do
+        stub_request(:get, "https://api.github.com/repos/socialcast/socialcast-git-extensions/pulls/59/commits?page=2")
+          .to_return(:status => 200, :body => commits_response2.to_json, :headers => {})
+      end
+      let(:use_pr_comments) { true }
+      it 'creates a branch based on v1.x and cherry-picks in PR 59' do
+        Socialcast::Gitx::CLI.start ['backportpr', '59', 'v1.x']
+        expect(github_pr_show).to have_been_requested
+        expect(github_pr_commits_list).to have_been_requested
+        expect(github_pr_commits_list2).to have_been_requested
+        expect(github_pr_create).to have_been_requested
+
+        expect(github_pr_comment_create).to have_been_requested
+        expect(socialcast_message_create).to_not have_been_requested
+      end
+    end
+
   end
 
   describe '#findpr' do
