@@ -1069,25 +1069,6 @@ describe Socialcast::Gitx::CLI do
           "number" => 59,
           "state" => "closed",
           "title" => "additional-notifications",
-          "user" => {
-            "login" => "MikeSilvis",
-            "id" => 152323,
-            "avatar_url" => "https://avatars.githubusercontent.com/u/152323?",
-            "gravatar_id" => "1bb5f2e12dcbfb8c103689f4ae94f431",
-            "url" => "https://api.github.com/users/MikeSilvis",
-            "html_url" => "https://github.com/MikeSilvis",
-            "followers_url" => "https://api.github.com/users/MikeSilvis/followers",
-            "following_url" => "https://api.github.com/users/MikeSilvis/following{/other_user}",
-            "gists_url" => "https://api.github.com/users/MikeSilvis/gists{/gist_id}",
-            "starred_url" => "https://api.github.com/users/MikeSilvis/starred{/owner}{/repo}",
-            "subscriptions_url" => "https://api.github.com/users/MikeSilvis/subscriptions",
-            "organizations_url" => "https://api.github.com/users/MikeSilvis/orgs",
-            "repos_url" => "https://api.github.com/users/MikeSilvis/repos",
-            "events_url" => "https://api.github.com/users/MikeSilvis/events{/privacy}",
-            "received_events_url" => "https://api.github.com/users/MikeSilvis/received_events",
-            "type" => "User",
-            "site_admin" => false
-          },
           "body" => "simply testing this out",
           "created_at" => "2014-03-18T22:39:37Z",
           "updated_at" => "2014-03-18T22:40:18Z",
@@ -1109,23 +1090,7 @@ describe Socialcast::Gitx::CLI do
           {
             "sha" => "5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
             "commit" => {
-              "author" => {
-                "name" => "Mike Silvis",
-                "email" => "mikesilvis@gmail.com",
-                "date" => "2014-03-18T22:39:12Z"
-              },
-              "committer" => {
-                "name" => "Mike Silvis",
-                "email" => "mikesilvis@gmail.com",
-                "date" => "2014-03-18T22:39:12Z"
-              },
-              "message" => "adding the ability to specify additional reviewers",
-              "tree" => {
-                "sha" => "dcf05deb22223997a5184cd3a1866249f3e73e3b",
-                "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/trees/dcf05deb22223997a5184cd3a1866249f3e73e3b"
-              },
-              "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
-              "comment_count" => 0
+              "message" => "adding the ability to specify additional reviewers"
             },
             "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
             "parents" => [
@@ -1144,30 +1109,14 @@ describe Socialcast::Gitx::CLI do
           {
             "sha" => "5e30d5af3f4d1bb3a34cc97568299be028b65f6d",
             "commit" => {
-              "author" => {
-                "name" => "Mike Silvis",
-                "email" => "mikesilvis@gmail.com",
-                "date" => "2014-03-18T22:39:12Z"
-              },
-              "committer" => {
-                "name" => "Mike Silvis",
-                "email" => "mikesilvis@gmail.com",
-                "date" => "2014-03-18T22:39:12Z"
-              },
-              "message" => "adding the ability to specify additional reviewers",
-              "tree" => {
-                "sha" => "dcf05deb22223997a5184cd3a1866249f3e73e3b",
-                "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/trees/dcf05deb22223997a5184cd3a1866249f3e73e3b"
-              },
-              "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/git/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
-              "comment_count" => 0
+              "message" => "adding the ability to specify additional reviewers"
             },
-            "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+            "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6d",
             "parents" => [
               {
-                "sha" => "1baae2de301c43d44297647f3f9c1e06697748ad",
-                "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/1baae2de301c43d44297647f3f9c1e06697748ad",
-                "html_url" => "https://github.com/socialcast/socialcast-git-extensions/commit/1baae2de301c43d44297647f3f9c1e06697748ad"
+                "sha" => "5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+                "url" => "https://api.github.com/repos/socialcast/socialcast-git-extensions/commits/5e30d5af3f4d1bb3a34cc97568299be028b65f6f",
+                "html_url" => "https://github.com/socialcast/socialcast-git-extensions/commit/5e30d5af3f4d1bb3a34cc97568299be028b65f6f"
               }
             ]
           }
